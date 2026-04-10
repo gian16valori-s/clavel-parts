@@ -10,6 +10,7 @@ const categories = [
   { id: 'amortiguacion', name: 'Amortiguación',        image: '/categories/suspension.png' },
   { id: 'embrague',      name: 'Embrague',             image: '/categories/embrague.png' },
   { id: 'electrico',     name: 'Sistema eléctrico',    image: '/categories/electricidad.png' },
+  { id: 'interior',      name: 'Interior',             image: '/categories/interior.png' },
   { id: 'aceites',       name: 'Aceites y líquidos',   image: '/categories/lubricacion.png' },
   { id: 'correas',       name: 'Correas y cadenas',    image: '/categories/distribucion.png' },
   { id: 'carroceria',    name: 'Carrocería',           image: '/categories/carroceria.png' },

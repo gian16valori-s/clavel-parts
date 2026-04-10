@@ -5,8 +5,15 @@ import { useAppStore } from '@/lib/cartStore'
 import type { CartProduct } from '@/lib/cartStore'
 import { getCategoryImage } from '@/lib/categoryImages'
 
+interface ListingCardProduct extends Omit<CartProduct, 'qty'> {
+  group?: string
+  subgroup?: string
+  stock?: number
+  liquidation?: boolean
+}
+
 interface ListingCardProps {
-  product: Omit<CartProduct, 'qty'>
+  product: ListingCardProduct
   onAdded?: () => void
 }
 
@@ -66,8 +73,54 @@ export default function ListingCard({ product, onAdded }: ListingCardProps) {
           {product.name}
         </div>
 
-        <div className="mb-3" style={{ fontSize: '0.78rem', color: 'var(--gray)' }}>
+        <div className="mb-2" style={{ fontSize: '0.78rem', color: 'var(--gray)' }}>
           {product.brand} · Ref: {product.ref}
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {product.subgroup && (
+            <span
+              className="font-condensed font-bold uppercase"
+              style={{
+                fontSize: '0.68rem',
+                color: 'var(--slate2)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 999,
+                padding: '0.2rem 0.5rem',
+              }}
+            >
+              {product.subgroup}
+            </span>
+          )}
+          {typeof product.stock === 'number' && (
+            <span
+              className="font-condensed font-bold uppercase"
+              style={{
+                fontSize: '0.68rem',
+                color: 'var(--gray2)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 999,
+                padding: '0.2rem 0.5rem',
+              }}
+            >
+              Stock: {product.stock}
+            </span>
+          )}
+          {product.liquidation && (
+            <span
+              className="font-condensed font-bold uppercase"
+              style={{
+                fontSize: '0.68rem',
+                color: '#8a6d00',
+                background: 'rgba(240,224,64,0.12)',
+                border: '1px solid rgba(240,224,64,0.3)',
+                borderRadius: 999,
+                padding: '0.2rem 0.5rem',
+              }}
+            >
+              Liquidación
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between">
