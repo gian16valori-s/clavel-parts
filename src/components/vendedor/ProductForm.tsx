@@ -127,8 +127,8 @@ function VehicleSelectorHierarchical({
   }, [marcaId]);
 
   useEffect(() => {
-    if (!modeloId) setStep(1);
-  }, [modeloId]);
+    if (marcaId && !modeloId) setStep(1);
+  }, [marcaId, modeloId]);
 
   const listStyle: React.CSSProperties = {
     display: "flex",
@@ -242,7 +242,9 @@ function VehicleSelectorHierarchical({
               type="button"
               onClick={() => {
                 setMarcaId(null);
+                setModeloId(null);
                 setModelos([]);
+                setVersiones([]);
               }}
               style={backBtnStyle}
             >
