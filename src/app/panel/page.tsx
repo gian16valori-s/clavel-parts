@@ -1,53 +1,22 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import {
-  getSession,
-  getVendedorActual,
-  logoutVendedor,
-  type Vendedor,
-} from '@/lib/vendedorAuth'
-import {
-  crearProductoVendedor,
-  getProductosVendedorActual,
-  type ProductoVendedorResumen,
-} from '@/lib/vendedorProducts'
 
-interface ProductFormState {
-  sku: string
-  producto: string
-  tipo_pieza: string
-  marca_pieza: string
-  numero_parte_oem: string
-  precio: string
-  precio_oferta: string
-  stock: string
-  imagen_url: string
-}
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { getSession, getVendedorActual, logoutVendedor, type Vendedor } from '@/lib/vendedorAuth';
+import { getProductosVendedorActual, type ProductoVendedorResumen } from '@/lib/vendedorProducts';
+import ProductForm from '@/components/vendedor/ProductForm';
 
-const initialForm: ProductFormState = {
-  sku: '',
-  producto: '',
-  tipo_pieza: '',
-  marca_pieza: '',
-  numero_parte_oem: '',
-  precio: '',
-  precio_oferta: '',
-  stock: '0',
-  imagen_url: '',
-}
+// Quitar lógica y estado del formulario anterior
 
 export default function PanelVendedorPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
-  const [vendedor, setVendedor] = useState<Vendedor | null>(null)
-  const [productos, setProductos] = useState<ProductoVendedorResumen[]>([])
-  const [form, setForm] = useState<ProductFormState>(initialForm)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [userEmail, setUserEmail] = useState('');
+  const [vendedor, setVendedor] = useState<Vendedor | null>(null);
+  const [productos, setProductos] = useState<ProductoVendedorResumen[]>([]);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     const loadPanel = async () => {
@@ -88,48 +57,8 @@ export default function PanelVendedorPage() {
     router.replace('/login/vendedor')
   }
 
-  function updateField<K extends keyof ProductFormState>(field: K, value: ProductFormState[K]) {
-    setForm((current) => ({ ...current, [field]: value }))
-  }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    try {
-      setSaving(true)
-      setError('')
-      setSuccess('')
-
-      const result = await crearProductoVendedor({
-        sku: form.sku,
-        producto: form.producto,
-        tipo_pieza: form.tipo_pieza,
-        marca_pieza: form.marca_pieza,
-        numero_parte_oem: form.numero_parte_oem,
-        precio: Number(form.precio),
-        precio_oferta: form.precio_oferta ? Number(form.precio_oferta) : null,
-        stock: Number(form.stock || 0),
-        imagen_url: form.imagen_url,
-      })
-
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-
-      setSuccess('Producto cargado correctamente en Supabase.')
-      setForm(initialForm)
-
-      const productsResult = await getProductosVendedorActual()
-      if (!productsResult.error) {
-        setProductos(productsResult.data)
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'No se pudo crear el producto.')
-    } finally {
-      setSaving(false)
-    }
-  }
+  // Quitar updateField y handleSubmit, el formulario ahora es ProductForm
 
   const nombreVendedor =
     vendedor?.nombre_comercial || vendedor?.nombre || vendedor?.razon_social || 'Vendedor'
@@ -172,6 +101,7 @@ export default function PanelVendedorPage() {
   return (
     <main className="min-h-screen px-4 py-8" style={{ background: 'var(--dark)' }}>
       <div className="max-w-6xl mx-auto">
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h1 className="font-condensed font-black italic uppercase" style={{ fontSize: '2.2rem', color: 'var(--yellow)' }}>
@@ -179,14 +109,22 @@ export default function PanelVendedorPage() {
             </h1>
             <p style={{ color: 'var(--gray2)' }}>{userEmail}</p>
           </div>
-
-          <button
-            onClick={handleLogout}
-            className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
-            style={{ background: 'var(--slate)', color: 'var(--white)' }}
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/panel/vender')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+            >
+              Vender
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--slate)', color: 'var(--white)' }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
 
         {(error || success) && (
@@ -202,75 +140,7 @@ export default function PanelVendedorPage() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <section className="rounded-xl border p-5" style={{ background: 'var(--dark2)', borderColor: 'var(--dark4)' }}>
-            <div className="mb-5">
-              <h2 className="font-condensed font-extrabold uppercase" style={{ fontSize: '1.35rem', color: 'var(--white)' }}>
-                Cargar producto
-              </h2>
-              <p style={{ color: 'var(--gray)' }}>
-                Este formulario inserta directo en `public.productos` usando tu `vendedor_id`.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>SKU</label>
-                <input value={form.sku} onChange={(e) => updateField('sku', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} required />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Tipo de pieza</label>
-                <input value={form.tipo_pieza} onChange={(e) => updateField('tipo_pieza', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} required />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Producto</label>
-                <input value={form.producto} onChange={(e) => updateField('producto', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} required />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Marca de la pieza</label>
-                <input value={form.marca_pieza} onChange={(e) => updateField('marca_pieza', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Número OEM</label>
-                <input value={form.numero_parte_oem} onChange={(e) => updateField('numero_parte_oem', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Precio</label>
-                <input type="number" min="0" value={form.precio} onChange={(e) => updateField('precio', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} required />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Precio oferta</label>
-                <input type="number" min="0" value={form.precio_oferta} onChange={(e) => updateField('precio_oferta', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Stock</label>
-                <input type="number" min="0" value={form.stock} onChange={(e) => updateField('stock', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} required />
-              </div>
-
-              <div>
-                <label className="block mb-2 text-sm uppercase" style={{ color: 'var(--gray2)' }}>Imagen URL</label>
-                <input value={form.imagen_url} onChange={(e) => updateField('imagen_url', e.target.value)} className="w-full rounded-md px-3 py-2 border" style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', color: 'var(--white)' }} />
-              </div>
-
-              <div className="md:col-span-2">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="rounded-md px-4 py-3 font-condensed font-black italic uppercase"
-                  style={{ background: 'var(--yellow)', color: 'var(--text-dark)', opacity: saving ? 0.7 : 1 }}
-                >
-                  {saving ? 'GUARDANDO...' : 'GUARDAR PRODUCTO'}
-                </button>
-              </div>
-            </form>
-          </section>
-
+          {/* Aquí puedes agregar más gestiones del vendedor, menú, etc. */}
           <aside className="rounded-xl border p-5" style={{ background: 'var(--dark2)', borderColor: 'var(--dark4)' }}>
             <h2 className="font-condensed font-extrabold uppercase mb-4" style={{ fontSize: '1.35rem', color: 'var(--white)' }}>
               Datos del vendedor
