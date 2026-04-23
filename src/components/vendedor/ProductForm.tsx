@@ -399,6 +399,11 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     return normalizeText(getGrupoDisplayName(selectedGrupo.nombre)) === "interior";
   }, [selectedGrupo]);
 
+  const isCarroceriaGroup = useMemo(() => {
+    if (!selectedGrupo) return false;
+    return normalizeText(selectedGrupo.nombre).includes("carroceria");
+  }, [selectedGrupo]);
+
   const isOpticasSubgroup = useMemo(() => {
     return normalizeText(subgrupoNombre).includes("optic");
   }, [subgrupoNombre]);
@@ -412,6 +417,12 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   }, [tiposPieza]);
 
   const showOpticaAmbasOption = isOpticasSubgroup && hasOpticaDerecha && hasOpticaIzquierda;
+
+  const hasParrillaDelantera = useMemo(() => {
+    return tiposPieza.some((item) => normalizeText(item.nombre).includes("parrilla delantera"));
+  }, [tiposPieza]);
+
+  const showParrillaDelanteraOption = isCarroceriaGroup && !hasParrillaDelantera;
 
   // ─── Fetch ─────────────────────────────────────────────────
 
@@ -841,6 +852,19 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                       <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
                     </button>
                   ))}
+                  {showParrillaDelanteraOption && (
+                    <button
+                      key="parrilla-delantera"
+                      type="button"
+                      onClick={() => { setTipoPiezaId(""); setTipoPiezaNombre("Parrilla delantera"); }}
+                      style={rowBtnStyle}
+                      onMouseOver={(e) => (e.currentTarget.style.background = "#f5f6fa")}
+                      onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                    >
+                      <span>Parrilla delantera</span>
+                      <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
+                    </button>
+                  )}
                   {showOpticaAmbasOption && (
                     <button
                       key="optica-ambas"
