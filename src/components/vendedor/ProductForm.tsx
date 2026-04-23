@@ -650,10 +650,45 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     boxSizing: "border-box",
   };
 
+  const topNavBtnStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    background: "#fff",
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    color: "#111827",
+    fontWeight: 600,
+    cursor: "pointer",
+    fontSize: 14,
+    padding: "8px 12px",
+  };
+
+  const goBack = () => {
+    if (typeof window !== "undefined") {
+      window.history.back();
+    }
+  };
+
+  const goHome = () => {
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  };
+
   // ─── UI ────────────────────────────────────────────────────
 
   return (
     <div ref={containerRef} style={{ maxWidth: 560, margin: "auto", padding: "24px 16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10 }}>
+        <button type="button" onClick={goBack} style={topNavBtnStyle}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>&larr;</span>
+          Atrás
+        </button>
+        <button type="button" onClick={goHome} style={topNavBtnStyle}>
+          Home
+        </button>
+      </div>
       <h2 style={{ marginBottom: 24 }}>Cargar producto</h2>
       <StepBar current={step} />
 
