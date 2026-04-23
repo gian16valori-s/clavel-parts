@@ -31,6 +31,8 @@ const MAIN_CATEGORIES = [
   { label: 'Otros', aliases: ['Otros'] },
 ] as const
 
+const ALL_SUBGROUP = 'TODO'
+
 const CATEGORY_DETAILS: Record<string, { description: string; highlights: string[] }> = {
   Motor: {
     description: 'Explorá componentes críticos del motor con compatibilidad por versión, síntoma y motorización.',
@@ -265,7 +267,7 @@ export default function ResultsGrid() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGroup, setSelectedGroup] = useState('TODOS')
-  const [selectedSubgroup, setSelectedSubgroup] = useState('TODOS')
+  const [selectedSubgroup, setSelectedSubgroup] = useState(ALL_SUBGROUP)
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -292,11 +294,11 @@ export default function ResultsGrid() {
 
   useEffect(() => {
     setSelectedGroup('TODOS')
-    setSelectedSubgroup('TODOS')
+    setSelectedSubgroup(ALL_SUBGROUP)
   }, [vehicle?.brand, vehicle?.model, vehicle?.year, vehicle?.engine, searchQuery])
 
   useEffect(() => {
-    setSelectedSubgroup('TODOS')
+    setSelectedSubgroup(ALL_SUBGROUP)
   }, [selectedGroup])
 
   function showToast() {
@@ -337,7 +339,7 @@ export default function ResultsGrid() {
   useEffect(() => {
     if (selectedGroup !== 'TODOS' && !groups.includes(selectedGroup)) {
       setSelectedGroup('TODOS')
-      setSelectedSubgroup('TODOS')
+      setSelectedSubgroup(ALL_SUBGROUP)
     }
   }, [groups, selectedGroup])
 
@@ -346,20 +348,20 @@ export default function ResultsGrid() {
       ? catalogProducts
       : catalogProducts.filter((product) => matchesCategory(product, selectedGroup))
 
-    return ['TODOS', ...Array.from(new Set(filteredByGroup.map((product) => product.subgroup)))].filter(Boolean)
+    return [ALL_SUBGROUP, ...Array.from(new Set(filteredByGroup.map((product) => product.subgroup)))].filter(Boolean)
   }, [catalogProducts, selectedGroup])
 
   const filteredProducts = useMemo(() => {
     return catalogProducts.filter((product) => {
       const matchesGroupFilter = matchesCategory(product, selectedGroup)
-      const matchesSubgroup = selectedSubgroup === 'TODOS' || product.subgroup === selectedSubgroup
+      const matchesSubgroup = selectedSubgroup === ALL_SUBGROUP || product.subgroup === selectedSubgroup
       return matchesGroupFilter && matchesSubgroup
     })
   }, [catalogProducts, selectedGroup, selectedSubgroup])
 
   const subgroupCards = useMemo(
     () => subgroups
-      .filter((subgroup) => subgroup !== 'TODOS')
+      .filter((subgroup) => subgroup !== ALL_SUBGROUP)
       .map((subgroup) => ({
         name: subgroup,
         hint: SUBGROUP_HINTS[subgroup] ?? 'Entrá para ver piezas compatibles dentro de esta familia.',
@@ -446,7 +448,7 @@ export default function ResultsGrid() {
                     ? `categorías disponibles para “${searchQuery}”`
                     : `categorías disponibles para tu ${vehicle?.brand ?? 'vehículo'}`}
                 </>
-              ) : selectedSubgroup === 'TODOS' ? (
+              ) : selectedSubgroup === ALL_SUBGROUP ? (
                 <>
                   <strong style={{ color: 'var(--yellow)' }}>{subgroupCards.length}</strong> subcategorías dentro de {selectedGroup}
                 </>
@@ -461,7 +463,7 @@ export default function ResultsGrid() {
               style={{ fontSize: '0.85rem', color: 'var(--slate)' }}
             >
               {selectedGroup !== 'TODOS'
-                ? selectedSubgroup !== 'TODOS'
+                ? selectedSubgroup !== ALL_SUBGROUP
                   ? `SUBGRUPO: ${selectedSubgroup}`
                   : `GRUPO: ${selectedGroup}`
                 : searchQuery
@@ -544,7 +546,7 @@ export default function ResultsGrid() {
                 <button
                   onClick={() => {
                     setSelectedGroup('TODOS')
-                    setSelectedSubgroup('TODOS')
+                    setSelectedSubgroup(ALL_SUBGROUP)
                   }}
                   className="font-condensed font-bold uppercase"
                   style={{
@@ -559,7 +561,7 @@ export default function ResultsGrid() {
                   ← Volver a categorías
                 </button>
                 <div style={{ fontSize: '0.85rem', color: 'var(--slate)' }}>
-                  {selectedGroup} {selectedSubgroup !== 'TODOS' ? `· ${selectedSubgroup}` : ''}
+                  {selectedGroup} {selectedSubgroup !== ALL_SUBGROUP ? `· ${selectedSubgroup}` : ''}
                 </div>
               </div>
 
@@ -633,16 +635,16 @@ export default function ResultsGrid() {
                   </div>
                   <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
                     <button
-                      onClick={() => setSelectedSubgroup('TODOS')}
+                      onClick={() => setSelectedSubgroup(ALL_SUBGROUP)}
                       className="rounded-md px-4 py-3 text-left transition-all duration-200"
                       style={{
-                          background: selectedSubgroup === 'TODOS' ? 'rgba(240,224,64,0.12)' : 'var(--light-card)',
-                          border: `1px solid ${selectedSubgroup === 'TODOS' ? 'rgba(240,224,64,0.3)' : '#d9dde3'}`,
-                          color: selectedSubgroup === 'TODOS' ? '#8a6d00' : 'var(--text-dark)',
+                          background: selectedSubgroup === ALL_SUBGROUP ? 'rgba(240,224,64,0.12)' : 'var(--light-card)',
+                          border: `1px solid ${selectedSubgroup === ALL_SUBGROUP ? 'rgba(240,224,64,0.3)' : '#d9dde3'}`,
+                          color: selectedSubgroup === ALL_SUBGROUP ? '#8a6d00' : 'var(--text-dark)',
                         cursor: 'pointer',
                       }}
                     >
-                      TODOS
+                      TODO
                     </button>
                     {subgroupCards.map((subgroup) => (
                       <button
