@@ -404,6 +404,11 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     return normalizeText(selectedGrupo.nombre).includes("carroceria");
   }, [selectedGrupo]);
 
+  const isAccesoriosGroup = useMemo(() => {
+    if (!selectedGrupo) return false;
+    return normalizeText(selectedGrupo.nombre).includes("accesorios");
+  }, [selectedGrupo]);
+
   const isOpticasSubgroup = useMemo(() => {
     return normalizeText(subgrupoNombre).includes("optic");
   }, [subgrupoNombre]);
@@ -780,7 +785,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             )}
 
             {/* 1b: Elegir Subgrupo */}
-            {grupoId && !isInteriorGroup && !subgrupoId && (
+            {grupoId && !isInteriorGroup && !isAccesoriosGroup && !subgrupoId && (
               <div style={cardStyle}>
                 <h3 style={cardTitleStyle}>¿Qué opción lo describe?</h3>
                 <div style={listStyle}>
@@ -801,6 +806,66 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                     <span style={{ fontSize: 22 }}>&larr;</span> Volver a grupos
                   </button>
                 </div>
+              </div>
+            )}
+
+            {grupoId && isAccesoriosGroup && (
+              <div style={cardStyle}>
+                <h3 style={cardTitleStyle}>Accesorios</h3>
+                <div style={{ padding: "0 32px 0 32px", color: "#4b5563", fontSize: 15 }}>
+                  Elegi solo una opcion para publicar tus accesorios.
+                </div>
+                <div style={{ ...listStyle, marginTop: 18 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setSubgrupoId(""); setSubgrupoNombre("Accesorios"); setTipoPiezaId(""); setTipoPiezaNombre("Accesorios universales"); }}
+                    style={rowBtnStyle}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#f5f6fa")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                  >
+                    <span>Accesorios universales</span>
+                    <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSubgrupoId(""); setSubgrupoNombre("Accesorios"); setTipoPiezaId(""); setTipoPiezaNombre("Accesorios específicos"); }}
+                    style={rowBtnStyle}
+                    onMouseOver={(e) => (e.currentTarget.style.background = "#f5f6fa")}
+                    onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                  >
+                    <span>Accesorios específicos</span>
+                    <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
+                  </button>
+                </div>
+                {tipoPiezaNombre && (
+                  <div style={{ padding: "24px 32px 28px 32px", display: "flex", flexDirection: "column", gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "16px 0", fontWeight: 700, fontSize: 18, cursor: "pointer", width: "100%" }}
+                    >
+                      Siguiente: Compatibilidad →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setTipoPiezaId(""); setTipoPiezaNombre(""); }}
+                      style={{ color: "#2563eb", background: "none", border: "none", fontWeight: 600, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}
+                    >
+                      <span style={{ fontSize: 20 }}>&larr;</span> Cambiar opcion
+                    </button>
+                  </div>
+                )}
+                {!tipoPiezaNombre && (
+                  <div style={{ padding: "16px 32px 24px 32px" }}>
+                    <button
+                      type="button"
+                      onClick={() => { setGrupoId(""); setGrupoNombre(""); }}
+                      style={backBtnStyle}
+                    >
+                      <span style={{ fontSize: 22 }}>&larr;</span> Volver a grupos
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
