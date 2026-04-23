@@ -261,6 +261,7 @@ export default function ResultsGrid() {
   const { vehicle, searchQuery, setView, cartCount } = useAppStore()
   const [toast, setToast] = useState(false)
   const [products, setProducts] = useState<CatalogProduct[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGroup, setSelectedGroup] = useState('TODOS')
@@ -671,7 +672,12 @@ export default function ResultsGrid() {
               ) : (
                 <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                   {filteredProducts.map((product) => (
-                    <ListingCard key={product.id} product={product} onAdded={showToast} />
+                    <ListingCard
+                      key={product.id}
+                      product={product}
+                      onAdded={showToast}
+                      onOpen={(item) => setSelectedProduct(item as CatalogProduct)}
+                    />
                   ))}
                 </div>
               )}
@@ -679,6 +685,72 @@ export default function ResultsGrid() {
           )}
         </main>
       </div>
+
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-[450] flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-xl overflow-hidden"
+            style={{ background: 'var(--dark2)', border: '1px solid var(--dark3)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grid md:grid-cols-2">
+              <div className="relative" style={{ minHeight: 280, background: 'var(--dark3)' }}>
+                <Image
+                  src={selectedProduct.image || getCategoryImage(selectedProduct.category)}
+                  alt={selectedProduct.name}
+                  fill
+                  className="object-contain p-6"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+              <div className="p-6">
+                <div className="font-condensed font-extrabold uppercase text-white" style={{ fontSize: '1.3rem' }}>
+                  {selectedProduct.name}
+                </div>
+                <div className="mt-2" style={{ color: 'var(--gray2)', fontSize: '0.9rem' }}>
+                  {selectedProduct.brand} · Ref: {selectedProduct.ref}
+                </div>
+                <div className="mt-3" style={{ color: 'var(--gray)', fontSize: '0.85rem' }}>
+                  {selectedProduct.group} · {selectedProduct.subgroup}
+                </div>
+                <div className="mt-1" style={{ color: 'var(--gray)', fontSize: '0.85rem' }}>
+                  Compatibilidad: {selectedProduct.version} · {selectedProduct.engine}
+                </div>
+
+                <div className="mt-4 font-condensed font-black" style={{ fontSize: '1.8rem', color: 'var(--yellow)' }}>
+                  ${selectedProduct.price.toLocaleString('es-AR')}
+                </div>
+
+                <div className="mt-1" style={{ color: 'var(--gray2)', fontSize: '0.9rem' }}>
+                  Stock: {selectedProduct.stock}
+                </div>
+
+                <div className="mt-5 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProduct(null)}
+                    className="font-condensed font-bold uppercase"
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid var(--dark4)',
+                      color: 'var(--gray2)',
+                      padding: '0.6rem 1rem',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cartCount() > 0 && (
         <button

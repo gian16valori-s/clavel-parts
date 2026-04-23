@@ -494,6 +494,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
 
     // Paths subidos a Storage — guardamos para rollback en caso de error
     const uploadedPaths: string[] = [];
+    let primaryImageUrl: string | null = null;
 
     try {
       const skuGenerado = `SKU-${Date.now()}`;
@@ -502,7 +503,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
         .from("productos")
         .insert([{
           sku: skuGenerado,
-          nombre: nombre.trim(),
+          producto: nombre.trim(),
           tipo_pieza_id: tipoPiezaId ? Number(tipoPiezaId) : null,
           grupo_id: Number(grupoId) || null,
           subgrupo_id: Number(subgrupoId) || null,
@@ -539,7 +540,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
         const file = imageFiles[i];
         if (!file) continue;
         try {
-          const { path } = await uploadProductImage({
+          const { path, publicUrl } = await uploadProductImage({
             supabase,
             file,
             productoId,
@@ -547,11 +548,25 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             orden: i + 1,
           });
           uploadedPaths.push(path);
+          if (i === 0) {
+            primaryImageUrl = publicUrl;
+          }
         } catch (imgErr: any) {
           // Rollback: eliminar el producto y los paths ya subidos
           await supabase.from("productos").delete().eq("id", productoId);
           await deleteProductImages(supabase, uploadedPaths);
           throw new Error(`Error subiendo imagen ${i + 1}: ${imgErr.message}`);
+        }
+      }
+
+      if (primaryImageUrl) {
+        const { error: imageUpdateError } = await supabase
+          .from("productos")
+          .update({ imagen_url: primaryImageUrl })
+          .eq("id", productoId);
+
+        if (imageUpdateError) {
+          throw new Error(`No se pudo guardar la imagen principal: ${imageUpdateError.message}`);
         }
       }
 

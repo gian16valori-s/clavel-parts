@@ -21,7 +21,11 @@ interface CatalogRow {
   activo: boolean | null
   especificaciones?: Record<string, unknown> | null
   vendedor: string | null
-  imagen_url?: string | null
+}
+
+interface ProductImageRow {
+  sku: string
+  imagen_url: string | null
 }
 
 export interface CatalogProduct extends Omit<CartProduct, 'qty'> {
@@ -80,7 +84,27 @@ export async function getCatalogProducts(
 
     if (error) throw error
 
-    return ((data as CatalogRow[] | null) ?? []).map((item, index) => ({
+    const rows = (data as CatalogRow[] | null) ?? []
+    const skus = Array.from(new Set(rows.map((item) => item.sku).filter(Boolean)))
+    const imageBySku = new Map<string, string>()
+
+    if (skus.length > 0) {
+      const { data: imageRows, error: imageError } = await supabase
+        .from('productos')
+        .select('sku, imagen_url')
+        .in('sku', skus)
+        .not('imagen_url', 'is', null)
+
+      if (!imageError) {
+        ;((imageRows as ProductImageRow[] | null) ?? []).forEach((row) => {
+          if (row.sku && row.imagen_url) {
+            imageBySku.set(row.sku, row.imagen_url)
+          }
+        })
+      }
+    }
+
+    return rows.map((item, index) => ({
       id: `${item.sku}-${index}`,
       name: item.producto,
       brand: item.marca_pieza || 'Sin marca',
@@ -90,7 +114,7 @@ export async function getCatalogProducts(
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
-      image: item.imagen_url || undefined,
+      image: imageBySku.get(item.sku) || undefined,
       group: item.grupo || 'General',
       subgroup: item.subgrupo || 'Otros',
       version: item.version,

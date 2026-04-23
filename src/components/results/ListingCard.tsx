@@ -15,6 +15,7 @@ interface ListingCardProduct extends Omit<CartProduct, 'qty'> {
 interface ListingCardProps {
   product: ListingCardProduct
   onAdded?: () => void
+  onOpen?: (product: ListingCardProduct) => void
 }
 
 
@@ -26,7 +27,7 @@ function Stars({ rating }: { rating: number }) {
   )
 }
 
-export default function ListingCard({ product, onAdded }: ListingCardProps) {
+export default function ListingCard({ product, onAdded, onOpen }: ListingCardProps) {
   const { addToCart } = useAppStore()
   const imageSrc = product.image || getCategoryImage(product.category)
 
@@ -35,10 +36,15 @@ export default function ListingCard({ product, onAdded }: ListingCardProps) {
     onAdded?.()
   }
 
+  function handleOpen() {
+    onOpen?.(product)
+  }
+
   return (
     <div
       className="rounded-md overflow-hidden cursor-pointer transition-all duration-200"
       style={{ background: 'var(--dark2)', border: '1px solid var(--dark3)' }}
+      onClick={handleOpen}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)'
         ;(e.currentTarget as HTMLDivElement).style.borderColor = 'var(--slate2)'
@@ -131,7 +137,10 @@ export default function ListingCard({ product, onAdded }: ListingCardProps) {
             ${product.price.toLocaleString('es-AR')}
           </div>
           <button
-            onClick={handleAdd}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAdd()
+            }}
             className="font-condensed font-bold uppercase tracking-[0.06em] transition-all duration-200"
             style={{
               background: 'var(--slate)',

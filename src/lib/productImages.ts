@@ -13,7 +13,6 @@ export type ProductImageRecord = {
   producto_id: number;
   url: string;
   orden: number;
-  storage_path: string;
 };
 
 /**
@@ -47,7 +46,7 @@ export async function uploadProductImage({
 
   const { error: dbError } = await supabase
     .from('fotos_producto')
-    .insert({ producto_id: productoId, url: publicUrl, orden, storage_path: path });
+    .insert({ producto_id: productoId, url: publicUrl, orden });
 
   if (dbError) throw dbError;
 
