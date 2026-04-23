@@ -190,7 +190,7 @@ export default function PanelVendedorPage() {
               <div className="font-condensed font-bold uppercase" style={{ color: 'var(--yellow)' }}>
                 {productos.length} item{productos.length !== 1 ? 's' : ''}
               </div>
-              {productos.length > 3 && (
+              {productos.length > 0 && (
                 <button
                   type="button"
                   onClick={() => router.push('/panel/productos')}
