@@ -93,6 +93,13 @@ function selectedEnGeneraciones(versiones: VersionRow[]): GeneracionRow[] {
   return agruparEnGeneraciones(versiones);
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function VehicleSelectorHierarchical({
   supabase,
   selectedVersiones,
@@ -376,6 +383,20 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const isOpticasSubgroup = useMemo(() => {
+    return normalizeText(subgrupoNombre).includes("optic");
+  }, [subgrupoNombre]);
+
+  const hasOpticaDerecha = useMemo(() => {
+    return tiposPieza.some((item) => normalizeText(item.nombre).includes("derech"));
+  }, [tiposPieza]);
+
+  const hasOpticaIzquierda = useMemo(() => {
+    return tiposPieza.some((item) => normalizeText(item.nombre).includes("izquierd"));
+  }, [tiposPieza]);
+
+  const showOpticaAmbasOption = isOpticasSubgroup && hasOpticaDerecha && hasOpticaIzquierda;
+
   // ─── Fetch ─────────────────────────────────────────────────
 
   const fetchGrupos = async () => {
@@ -505,6 +526,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           sku: skuGenerado,
           producto: nombre.trim(),
           tipo_pieza_id: tipoPiezaId ? Number(tipoPiezaId) : null,
+          tipo_pieza: tipoPiezaNombre.trim() || null,
           grupo_id: Number(grupoId) || null,
           subgrupo_id: Number(subgrupoId) || null,
           marca_pieza: marca.trim(),
@@ -760,7 +782,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             )}
 
             {/* 1d: Elegir Tipo de pieza */}
-            {grupoId && subgrupoId && tiposLoaded && tiposPieza.length > 0 && !tipoPiezaId && (
+            {grupoId && subgrupoId && tiposLoaded && tiposPieza.length > 0 && !tipoPiezaNombre && (
               <div style={cardStyle}>
                 <h3 style={cardTitleStyle}>¿Qué opción lo describe?</h3>
                 <div style={listStyle}>
@@ -775,6 +797,19 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                       <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
                     </button>
                   ))}
+                  {showOpticaAmbasOption && (
+                    <button
+                      key="optica-ambas"
+                      type="button"
+                      onClick={() => { setTipoPiezaId(""); setTipoPiezaNombre("Optica ambas"); }}
+                      style={rowBtnStyle}
+                      onMouseOver={(e) => (e.currentTarget.style.background = "#f5f6fa")}
+                      onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
+                    >
+                      <span>Optica ambas</span>
+                      <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
+                    </button>
+                  )}
                 </div>
                 <div style={{ padding: "20px 32px 28px 32px" }}>
                   <button type="button" onClick={() => { setSubgrupoId(""); setSubgrupoNombre(""); }} style={backBtnStyle}>
@@ -785,7 +820,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             )}
 
             {/* 1e: Resumen de categoría + Siguiente */}
-            {grupoId && subgrupoId && tiposLoaded && (tipoPiezaId || tiposPieza.length === 0) && (
+            {grupoId && subgrupoId && tiposLoaded && (Boolean(tipoPiezaNombre) || tiposPieza.length === 0) && (
               <div style={cardStyle}>
                 {/* Breadcrumb de la selección */}
                 <div style={{ padding: "28px 32px 0 32px" }}>
