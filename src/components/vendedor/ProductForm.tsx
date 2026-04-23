@@ -389,6 +389,16 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const selectedGrupo = useMemo(() => {
+    if (!grupoId) return null;
+    return grupos.find((g) => g.id === Number(grupoId)) ?? null;
+  }, [grupos, grupoId]);
+
+  const isInteriorGroup = useMemo(() => {
+    if (!selectedGrupo) return false;
+    return normalizeText(getGrupoDisplayName(selectedGrupo.nombre)) === "interior";
+  }, [selectedGrupo]);
+
   const isOpticasSubgroup = useMemo(() => {
     return normalizeText(subgrupoNombre).includes("optic");
   }, [subgrupoNombre]);
@@ -438,9 +448,12 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
       setSubgrupos([]);
       setTiposPieza([]);
       setTiposLoaded(false);
-      fetchSubgrupos(Number(grupoId));
+
+      if (!isInteriorGroup) {
+        fetchSubgrupos(Number(grupoId));
+      }
     }
-  }, [grupoId]);
+  }, [grupoId, isInteriorGroup]);
 
   useEffect(() => {
     if (subgrupoId) {
@@ -756,7 +769,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             )}
 
             {/* 1b: Elegir Subgrupo */}
-            {grupoId && !subgrupoId && (
+            {grupoId && !isInteriorGroup && !subgrupoId && (
               <div style={cardStyle}>
                 <h3 style={cardTitleStyle}>¿Qué opción lo describe?</h3>
                 <div style={listStyle}>
@@ -780,15 +793,40 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
               </div>
             )}
 
+            {grupoId && isInteriorGroup && (
+              <div style={cardStyle}>
+                <h3 style={cardTitleStyle}>Interior</h3>
+                <div style={{ padding: "0 32px 0 32px", color: "#4b5563", fontSize: 15 }}>
+                  En Interior no se separa por subcategorias. Publica el producto en listado general.
+                </div>
+                <div style={{ padding: "24px 32px 28px 32px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "16px 0", fontWeight: 700, fontSize: 18, cursor: "pointer", width: "100%" }}
+                  >
+                    Siguiente: Compatibilidad →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setGrupoId(""); setGrupoNombre(""); }}
+                    style={{ color: "#2563eb", background: "none", border: "none", fontWeight: 600, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}
+                  >
+                    <span style={{ fontSize: 20 }}>&larr;</span> Cambiar grupo
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 1c: Cargando tipos */}
-            {grupoId && subgrupoId && !tiposLoaded && (
+            {grupoId && !isInteriorGroup && subgrupoId && !tiposLoaded && (
               <div style={{ ...cardStyle, padding: "32px", textAlign: "center", color: "#888" }}>
                 Cargando opciones...
               </div>
             )}
 
             {/* 1d: Elegir Tipo de pieza */}
-            {grupoId && subgrupoId && tiposLoaded && tiposPieza.length > 0 && !tipoPiezaNombre && (
+            {grupoId && !isInteriorGroup && subgrupoId && tiposLoaded && tiposPieza.length > 0 && !tipoPiezaNombre && (
               <div style={cardStyle}>
                 <h3 style={cardTitleStyle}>¿Qué opción lo describe?</h3>
                 <div style={listStyle}>
@@ -826,7 +864,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             )}
 
             {/* 1e: Resumen de categoría + Siguiente */}
-            {grupoId && subgrupoId && tiposLoaded && (Boolean(tipoPiezaNombre) || tiposPieza.length === 0) && (
+            {grupoId && !isInteriorGroup && subgrupoId && tiposLoaded && (Boolean(tipoPiezaNombre) || tiposPieza.length === 0) && (
               <div style={cardStyle}>
                 {/* Breadcrumb de la selección */}
                 <div style={{ padding: "28px 32px 0 32px" }}>
