@@ -45,6 +45,21 @@ function slugifyCategory(value: string) {
     .replace(/[^a-z0-9]+/g, '')
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+function resolveSubgroup(item: CatalogRow) {
+  const tipoPieza = item.tipo_pieza?.trim() ?? ''
+  if (normalizeText(tipoPieza) === 'parrilla delantera') {
+    return 'Parrilla delantera'
+  }
+  return item.subgrupo || 'Otros'
+}
+
 export async function getCatalogProducts(
   vehicle: SelectedVehicle | null,
   searchQuery?: string
@@ -116,7 +131,7 @@ export async function getCatalogProducts(
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
       image: imageBySku.get(item.sku) || undefined,
       group: item.grupo || 'General',
-      subgroup: item.subgrupo || 'Otros',
+      subgroup: resolveSubgroup(item),
       version: item.version,
       engine: item.motor_codigo,
       stock: item.stock ?? 0,
