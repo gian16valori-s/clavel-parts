@@ -252,6 +252,7 @@ export default function PanelVendedorPage() {
                       </div>
                       <button
                         type="button"
+                        onClick={() => router.push('/panel/productos')}
                         className="rounded-md px-3 py-2 font-condensed font-bold uppercase"
                         style={{ background: 'var(--slate)', color: 'var(--white)' }}
                       >
