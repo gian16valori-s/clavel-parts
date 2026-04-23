@@ -306,25 +306,40 @@ export default function ResultsGrid() {
 
   const categoryDetail = useMemo(() => getCategoryDetail(selectedGroup), [selectedGroup])
 
-  const catalogProducts = useMemo(() => {
-    if (!vehicle || searchQuery) return products
+  const catalogProducts = useMemo(() => products, [products])
 
-    const missingCategoryProducts = MAIN_CATEGORIES
-      .filter((category) => category.label !== 'Liquidaciones')
-      .flatMap((category) => {
-        const hasCategoryData = products.some((product) => matchesCategory(product, category.label))
-        if (hasCategoryData) return []
+  const groupCards = useMemo(() => {
+    const known = MAIN_CATEGORIES
+      .map((category) => ({
+        name: category.label,
+        count: catalogProducts.filter((product) => matchesCategory(product, category.label)).length,
+        image: getCategoryImage(category.label),
+      }))
+      .filter((category) => category.count > 0)
 
-        return DEMO_CATALOG_PRODUCTS.filter((demoProduct) => matchesCategory(demoProduct, category.label))
-      })
+    const knownNames = new Set(known.map((item) => item.name))
+    const unknownGroups = Array.from(new Set(catalogProducts.map((product) => product.group).filter(Boolean)))
+      .filter((groupName) => !knownNames.has(groupName))
+      .map((groupName) => ({
+        name: groupName,
+        count: catalogProducts.filter((product) => product.group === groupName).length,
+        image: getCategoryImage(groupName),
+      }))
 
-    return [...products, ...missingCategoryProducts]
-  }, [products, vehicle, searchQuery])
+    return [...known, ...unknownGroups]
+  }, [catalogProducts])
 
   const groups = useMemo(
-    () => ['TODOS', ...MAIN_CATEGORIES.map((category) => category.label)],
-    []
+    () => ['TODOS', ...groupCards.map((group) => group.name)],
+    [groupCards]
   )
+
+  useEffect(() => {
+    if (selectedGroup !== 'TODOS' && !groups.includes(selectedGroup)) {
+      setSelectedGroup('TODOS')
+      setSelectedSubgroup('TODOS')
+    }
+  }, [groups, selectedGroup])
 
   const subgroups = useMemo(() => {
     const filteredByGroup = selectedGroup === 'TODOS'
@@ -341,15 +356,6 @@ export default function ResultsGrid() {
       return matchesGroupFilter && matchesSubgroup
     })
   }, [catalogProducts, selectedGroup, selectedSubgroup])
-
-  const groupCards = useMemo(
-    () => MAIN_CATEGORIES.map((category) => ({
-      name: category.label,
-      count: catalogProducts.filter((product) => matchesCategory(product, category.label)).length,
-      image: getCategoryImage(category.label),
-    })),
-    [catalogProducts]
-  )
 
   const subgroupCards = useMemo(
     () => subgroups

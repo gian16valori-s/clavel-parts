@@ -1,122 +1,121 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/cartStore'
-import {
-  getBrands,
-  getModelsByBrand,
-  getYearsByModel,
-  getVersionsByModelAndYear,
-  type Brand,
-  type Model,
-  type Version,
-} from '@/lib/supabaseVehicles'
+import { supabase } from '@/lib/supabase'
+
+type CatalogVehicleRow = {
+  marca: string
+  modelo: string
+  anio: number
+  version: string
+  motor_codigo: string
+}
+
+function uniqueSorted(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, 'es', { sensitivity: 'base' })
+  )
+}
 
 export default function VehicleSelector() {
   const { setVehicle, setView, setSearchQuery } = useAppStore()
 
-  // Selecciones del usuario
-  const [brandId, setBrandId] = useState<number | null>(null)
-  const [modelId, setModelId] = useState<number | null>(null)
-  const [versionId, setVersionId] = useState<number | null>(null)
+  const [rows, setRows] = useState<CatalogVehicleRow[]>([])
+
   const [brandName, setBrandName] = useState('')
   const [modelName, setModelName] = useState('')
+  const [year, setYear] = useState('')
+  const [versionKey, setVersionKey] = useState('')
   const [versionLabel, setVersionLabel] = useState('')
   const [engine, setEngine] = useState('')
-  const [year, setYear] = useState('')
   const [searchInput, setSearchInput] = useState('')
 
-  // Listas dinámicas (Supabase)
-  const [brands, setBrands] = useState<Brand[]>([])
-  const [models, setModels] = useState<Model[]>([])
-  const [years, setYears] = useState<string[]>([])
-  const [versions, setVersions] = useState<Version[]>([])
-
-  // Loading / error
-  const [loadingBrands, setLoadingBrands] = useState(true)
-  const [loadingModels, setLoadingModels] = useState(false)
-  const [loadingYears, setLoadingYears] = useState(false)
-  const [loadingVersions, setLoadingVersions] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  // Cargar marcas desde Supabase al montar
   useEffect(() => {
-    setLoadingBrands(true)
-    setLoadError(null)
-    getBrands()
-      .then((data) => setBrands(Array.isArray(data) ? data : []))
-      .catch(() => setLoadError('No se pudieron cargar las marcas desde Supabase.'))
-      .finally(() => setLoadingBrands(false))
+    const loadVehicleOptions = async () => {
+      setLoading(true)
+      setLoadError(null)
+
+      const { data, error } = await supabase
+        .from('vista_catalogo')
+        .select('marca,modelo,anio,version,motor_codigo')
+        .eq('activo', true)
+
+      if (error) {
+        setRows([])
+        setLoadError('No se pudieron cargar vehículos con productos desde Supabase.')
+        setLoading(false)
+        return
+      }
+
+      setRows((data as CatalogVehicleRow[] | null) ?? [])
+      setLoading(false)
+    }
+
+    void loadVehicleOptions()
   }, [])
 
-  // Cargar modelos cuando cambia la marca
-  useEffect(() => {
-    if (!brandId) return
+  const brands = useMemo(() => uniqueSorted(rows.map((item) => item.marca)), [rows])
 
-    setLoadingModels(true)
-    setModels([])
-    setModelId(null)
-    setModelName('')
-    setYears([])
-    setYear('')
-    setVersions([])
-    setVersionId(null)
-    setVersionLabel('')
-    setEngine('')
+  const models = useMemo(() => {
+    if (!brandName) return []
+    return uniqueSorted(rows.filter((item) => item.marca === brandName).map((item) => item.modelo))
+  }, [rows, brandName])
 
-    getModelsByBrand(brandId)
-      .then((data) => setModels(Array.isArray(data) ? data : []))
-      .catch(() => setModels([]))
-      .finally(() => setLoadingModels(false))
-  }, [brandId])
+  const years = useMemo(() => {
+    if (!brandName || !modelName) return []
+    const values = Array.from(
+      new Set(
+        rows
+          .filter((item) => item.marca === brandName && item.modelo === modelName)
+          .map((item) => String(item.anio))
+      )
+    )
+    return values.sort((a, b) => Number(b) - Number(a))
+  }, [rows, brandName, modelName])
 
-  // Cargar años cuando cambia el modelo
-  useEffect(() => {
-    if (!modelId) return
+  const versions = useMemo(() => {
+    if (!brandName || !modelName || !year) return []
 
-    setLoadingYears(true)
-    setYears([])
-    setYear('')
-    setVersions([])
-    setVersionId(null)
-    setVersionLabel('')
-    setEngine('')
+    const filtered = rows.filter(
+      (item) =>
+        item.marca === brandName &&
+        item.modelo === modelName &&
+        String(item.anio) === year
+    )
 
-    getYearsByModel(modelId)
-      .then((data) => setYears((Array.isArray(data) ? data : []).map(String)))
-      .catch(() => setYears([]))
-      .finally(() => setLoadingYears(false))
-  }, [modelId])
+    const byKey = new Map<string, { key: string; label: string; engine: string }>()
 
-  // Cargar versiones cuando cambia el año
-  useEffect(() => {
-    if (!modelId || !year) return
+    filtered.forEach((item) => {
+      const key = `${item.version}__${item.motor_codigo}`
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          key,
+          label: item.version,
+          engine: item.motor_codigo,
+        })
+      }
+    })
 
-    setLoadingVersions(true)
-    setVersions([])
-    setVersionId(null)
-    setVersionLabel('')
-    setEngine('')
+    return Array.from(byKey.values()).sort((a, b) =>
+      `${a.label} ${a.engine}`.localeCompare(`${b.label} ${b.engine}`, 'es', { sensitivity: 'base' })
+    )
+  }, [rows, brandName, modelName, year])
 
-    getVersionsByModelAndYear(modelId, Number(year))
-      .then((data) => setVersions(Array.isArray(data) ? data : []))
-      .catch(() => setVersions([]))
-      .finally(() => setLoadingVersions(false))
-  }, [modelId, year])
+  const isComplete = Boolean(brandName && modelName && year && versionLabel && engine)
 
-  function handleVersionChange(nextVersionId: string) {
-    const id = Number(nextVersionId)
-    const v = versions.find((item) => item.id === id)
-
-    setVersionId(id || null)
-    setVersionLabel(v?.version ?? '')
-    setEngine(v?.motor_codigo ?? '')
+  function handleVersionChange(nextKey: string) {
+    setVersionKey(nextKey)
+    const selected = versions.find((item) => item.key === nextKey)
+    setVersionLabel(selected?.label ?? '')
+    setEngine(selected?.engine ?? '')
   }
 
-  const isComplete = brandName && modelName && engine && year && versionLabel && versionId
-
   function handleSearch() {
-    if (!isComplete || !versionId) return
+    if (!isComplete) return
 
     setVehicle({
       brand: brandName,
@@ -124,7 +123,6 @@ export default function VehicleSelector() {
       engine,
       year,
       versionLabel,
-      versionId,
     })
     setView('results')
   }
@@ -171,54 +169,49 @@ export default function VehicleSelector() {
       <div className="relative">
         <select
           className={selectClass}
-          value={brandId ?? ''}
-          disabled={loadingBrands}
+          value={brandName}
+          disabled={loading}
           onChange={(e) => {
-            const id = Number(e.target.value)
-            const selected = brands.find((item) => item.id === id)
-            setBrandId(id || null)
-            setBrandName(selected?.nombre ?? '')
+            const nextBrand = e.target.value
+            setBrandName(nextBrand)
+            setModelName('')
+            setYear('')
+            setVersionKey('')
+            setVersionLabel('')
+            setEngine('')
           }}
         >
-          <option value="">{loadingBrands ? 'CARGANDO MARCAS…' : 'MARCA'}</option>
+          <option value="">{loading ? 'CARGANDO MARCAS…' : 'MARCA'}</option>
           {brands.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nombre}
+            <option key={item} value={item}>
+              {item}
             </option>
           ))}
         </select>
-        {loadingBrands && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
       </div>
 
       {/* MODELO */}
       <div className="relative">
         <select
           className={selectClass}
-          value={modelId ?? ''}
-          disabled={!brandId || loadingModels}
+          value={modelName}
+          disabled={!brandName || loading}
           onChange={(e) => {
-            const id = Number(e.target.value)
-            const selected = models.find((item) => item.id === id)
-            setModelId(id || null)
-            setModelName(selected?.nombre ?? '')
+            const nextModel = e.target.value
+            setModelName(nextModel)
+            setYear('')
+            setVersionKey('')
+            setVersionLabel('')
+            setEngine('')
           }}
         >
-          <option value="">{loadingModels ? 'CARGANDO MODELOS…' : 'MODELO'}</option>
+          <option value="">MODELO</option>
           {models.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nombre}
+            <option key={item} value={item}>
+              {item}
             </option>
           ))}
         </select>
-        {loadingModels && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
       </div>
 
       {/* AÑO */}
@@ -226,43 +219,38 @@ export default function VehicleSelector() {
         <select
           className={selectClass}
           value={year}
-          disabled={!modelId || loadingYears}
-          onChange={(e) => setYear(e.target.value)}
+          disabled={!modelName || loading}
+          onChange={(e) => {
+            setYear(e.target.value)
+            setVersionKey('')
+            setVersionLabel('')
+            setEngine('')
+          }}
         >
-          <option value="">{loadingYears ? 'CARGANDO AÑOS…' : 'AÑO'}</option>
+          <option value="">AÑO</option>
           {years.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
           ))}
         </select>
-        {loadingYears && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
       </div>
 
       {/* MOTOR / VERSION */}
       <div className="relative">
         <select
           className={selectClass}
-          value={versionId ?? ''}
-          disabled={!year || loadingVersions}
+          value={versionKey}
+          disabled={!year || loading}
           onChange={(e) => handleVersionChange(e.target.value)}
         >
-          <option value="">{loadingVersions ? 'CARGANDO VERSIONES…' : 'MOTOR / VERSIÓN'}</option>
+          <option value="">MOTOR / VERSIÓN</option>
           {versions.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.version} {item.motor_codigo ? `· ${item.motor_codigo}` : ''}
+            <option key={item.key} value={item.key}>
+              {item.label} {item.engine ? `· ${item.engine}` : ''}
             </option>
           ))}
         </select>
-        {loadingVersions && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
       </div>
 
       {isComplete && (
@@ -278,12 +266,6 @@ export default function VehicleSelector() {
             border: 'none',
             cursor: 'pointer',
             boxShadow: '0 4px 18px rgba(240,224,64,0.3)',
-          }}
-          onMouseEnter={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
-          }}
-          onMouseLeave={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.transform = 'none'
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-[18px] h-[18px]">
@@ -334,14 +316,6 @@ export default function VehicleSelector() {
           cursor: 'pointer',
         }}
         onClick={handleTextSearch}
-        onMouseEnter={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--slate2)'
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
-        }}
-        onMouseLeave={(e) => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--slate)'
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'none'
-        }}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-[18px] h-[18px]">
           <circle cx="11" cy="11" r="8" />
