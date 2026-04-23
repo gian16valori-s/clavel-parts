@@ -26,6 +26,17 @@ export interface ProductoVendedorResumen {
   activo: boolean | null
 }
 
+type ProductoVendedorRow = {
+  id: number
+  sku: string
+  producto: string | null
+  marca_pieza: string | null
+  imagen_url: string | null
+  precio: number | null
+  stock: number | null
+  activo: boolean | null
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) return error.message
   return fallback
@@ -44,14 +55,26 @@ export async function getProductosVendedorActual() {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('productos')
-      .select('id, sku, nombre, marca_pieza, precio, stock, activo')
+      .select('id, sku, producto, marca_pieza, imagen_url, precio, stock, activo')
       .eq('vendedor_id', vendedor.id)
       .order('id', { ascending: false })
 
     if (error) throw error
 
+    const mappedData: ProductoVendedorResumen[] =
+      ((data as ProductoVendedorRow[] | null) ?? []).map((item) => ({
+        id: item.id,
+        sku: item.sku,
+        nombre: item.producto ?? 'Sin nombre',
+        marca_pieza: item.marca_pieza,
+        imagen_url: item.imagen_url,
+        precio: item.precio,
+        stock: item.stock,
+        activo: item.activo,
+      }))
+
     return {
-      data: (data as ProductoVendedorResumen[] | null) ?? [],
+      data: mappedData,
       error: null as string | null,
     }
   } catch (error) {
