@@ -64,6 +64,7 @@ export default function PanelVendedorPage() {
     vendedor?.nombre_comercial || vendedor?.nombre || vendedor?.razon_social || 'Vendedor'
   const productosActivos = productos.filter((item) => item.activo !== false).length
   const stockTotal = productos.reduce((acc, item) => acc + Number(item.stock ?? 0), 0)
+  const productosPreview = productos.slice(0, 3)
 
   if (loading) {
     return (
@@ -182,11 +183,23 @@ export default function PanelVendedorPage() {
                 Tus productos
               </h2>
               <p style={{ color: 'var(--gray)' }}>
-                Vista tipo catálogo de los repuestos que cargaste en Supabase.
+                Vista resumida de tus productos más recientes.
               </p>
             </div>
-            <div className="font-condensed font-bold uppercase" style={{ color: 'var(--yellow)' }}>
-              {productos.length} item{productos.length !== 1 ? 's' : ''}
+            <div className="flex items-center gap-3">
+              <div className="font-condensed font-bold uppercase" style={{ color: 'var(--yellow)' }}>
+                {productos.length} item{productos.length !== 1 ? 's' : ''}
+              </div>
+              {productos.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/panel/productos')}
+                  className="rounded-md px-3 py-2 font-condensed font-bold uppercase"
+                  style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+                >
+                  Ver más
+                </button>
+              )}
             </div>
           </div>
 
@@ -194,7 +207,7 @@ export default function PanelVendedorPage() {
             <p style={{ color: 'var(--gray)' }}>Todavía no cargaste productos.</p>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {productos.map((item) => (
+              {productosPreview.map((item) => (
                 <article
                   key={item.id}
                   className="overflow-hidden rounded-xl border"
