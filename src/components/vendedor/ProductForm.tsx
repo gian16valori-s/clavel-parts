@@ -100,6 +100,12 @@ function normalizeText(value: string) {
     .toLowerCase();
 }
 
+function getGrupoDisplayName(nombre: string) {
+  const normalized = normalizeText(nombre);
+  if (normalized === "electricidad interior") return "Interior";
+  return nombre;
+}
+
 function VehicleSelectorHierarchical({
   supabase,
   selectedVersiones,
@@ -736,12 +742,12 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 <div style={listStyle}>
                   {grupos.map((g) => (
                     <button key={g.id} type="button"
-                      onClick={() => { setGrupoId(g.id); setGrupoNombre(g.nombre); }}
+                      onClick={() => { setGrupoId(g.id); setGrupoNombre(getGrupoDisplayName(g.nombre)); }}
                       style={rowBtnStyle}
                       onMouseOver={(e) => (e.currentTarget.style.background = "#f5f6fa")}
                       onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
                     >
-                      <span>{g.nombre}</span>
+                      <span>{getGrupoDisplayName(g.nombre)}</span>
                       <span style={{ fontSize: 22, color: "#bdbdbd" }}>&#8250;</span>
                     </button>
                   ))}
