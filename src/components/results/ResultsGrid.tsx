@@ -319,7 +319,7 @@ export default function ResultsGrid() {
       }))
       .filter((category) => category.count > 0)
 
-    const knownNames = new Set(known.map((item) => item.name))
+    const knownNames = new Set<string>(known.map((item) => item.name))
     const unknownGroups = Array.from(new Set(catalogProducts.map((product) => product.group).filter(Boolean)))
       .filter((groupName) => !knownNames.has(groupName))
       .map((groupName) => ({
