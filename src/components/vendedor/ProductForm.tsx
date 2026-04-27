@@ -362,6 +362,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [publishedNombre, setPublishedNombre] = useState<string>("");
 
   // Paso 1
   const [grupos, setGrupos] = useState<Grupo[]>([]);
@@ -481,13 +482,6 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     }
   }, [subgrupoId]);
 
-  // Auto-avanzar a compatibilidad SOLO cuando la carga terminó y no hay tipos definidos
-  useEffect(() => {
-    if (step === 1 && subgrupoId && tiposLoaded && tiposPieza.length === 0) {
-      setStep(2);
-    }
-  }, [tiposLoaded, tiposPieza.length, subgrupoId, step]);
-
   // ─── Handlers ──────────────────────────────────────────────
 
   const resetForm = () => {
@@ -504,6 +498,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     setImageFiles([null, null, null]);
     setImagePreviews([null, null, null]);
     setSuccess(null);
+    setPublishedNombre("");
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -627,9 +622,9 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
         }
       }
 
-      setSuccess(`✓ Producto "${nombre}" cargado correctamente`);
+      setPublishedNombre(nombre.trim());
       containerRef.current?.scrollIntoView({ behavior: "smooth" });
-      resetForm();
+      setStep(4);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -746,21 +741,89 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           Home
         </button>
       </div>
-      <h2 style={{ marginBottom: 24 }}>Cargar producto</h2>
-      <StepBar current={step} />
+      {step !== 4 && <h2 style={{ marginBottom: 24 }}>Cargar producto</h2>}
+      {step !== 4 && <StepBar current={step} />}
 
-      {error && (
+      {/* ── PASO 4: Pantalla de éxito ── */}
+      {step === 4 && (
+        <div style={{ textAlign: "center", padding: "40px 16px 32px" }}>
+          {/* Ícono check */}
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: "rgba(34,197,94,0.15)", border: "2px solid #22c55e",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 24px",
+          }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth={2.5}
+              style={{ width: 36, height: 36 }}>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+
+          <h2 style={{ fontFamily: "inherit", fontWeight: 900, fontSize: "1.6rem",
+            textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 10,
+            color: "var(--white, #f9fafb)" }}>
+            ¡Producto publicado!
+          </h2>
+
+          {publishedNombre && (
+            <p style={{ fontSize: "1rem", color: "var(--gray2, #9ca3af)", marginBottom: 8 }}>
+              <strong style={{ color: "var(--yellow, #f0e040)" }}>{publishedNombre}</strong>
+            </p>
+          )}
+
+          <p style={{ fontSize: "0.9rem", color: "var(--gray, #6b7280)", marginBottom: 36 }}>
+            Tu producto fue cargado correctamente y ya está visible en el catálogo.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
+            <button
+              type="button"
+              onClick={resetForm}
+              style={{
+                background: "var(--yellow, #f0e040)",
+                color: "var(--text-dark, #111827)",
+                border: "none", borderRadius: 8,
+                padding: "14px 24px",
+                fontWeight: 800, fontSize: "1rem",
+                textTransform: "uppercase", letterSpacing: "0.06em",
+                cursor: "pointer",
+              }}
+            >
+              + Cargar otro producto
+            </button>
+            <button
+              type="button"
+              onClick={() => { window.location.href = "/panel"; }}
+              style={{
+                background: "transparent",
+                color: "var(--gray2, #9ca3af)",
+                border: "1px solid var(--dark4, #374151)",
+                borderRadius: 8,
+                padding: "14px 24px",
+                fontWeight: 700, fontSize: "1rem",
+                textTransform: "uppercase", letterSpacing: "0.06em",
+                cursor: "pointer",
+              }}
+            >
+              ← Volver al panel de vendedor
+            </button>
+          </div>
+        </div>
+      )}
+
+      {error && step !== 4 && (
         <div style={{ color: "#dc2626", marginBottom: 12, padding: "10px 16px", background: "#fef2f2", borderRadius: 6 }}>
           {error}
         </div>
       )}
-      {success && (
+      {success && step !== 4 && (
         <div style={{ color: "#16a34a", marginBottom: 12, padding: "10px 16px", background: "#f0fdf4", borderRadius: 6 }}>
           {success}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ display: step === 4 ? "none" : undefined }}>
         {/* ── PASO 1: Categoría ── */}
         {step === 1 && (
           <>
