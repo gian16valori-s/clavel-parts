@@ -1,236 +1,360 @@
-import { useState, useEffect } from 'react';
+'use client'
 
+import { useState, useEffect } from 'react'
+import type { GarageCar } from '@/lib/garageData'
+import { demoBitacora, typeLabels, typeColors } from '@/lib/garageData'
 
-interface GarageCar {
-  id: string;
-  brand: string;
-  model: string;
-  version: string;
-  year: string | number;
-  km: number;
-  plate: string;
-  photoFront?: string;
+type Panel = null | 'bitacora' | 'stats'
+
+const BTN_BASE: React.CSSProperties = {
+  flex: 1,
+  border: '1px solid rgba(255,255,255,0.18)',
+  borderRadius: 5,
+  padding: '5px 0',
+  fontWeight: 900,
+  fontSize: '0.75rem',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase' as const,
+  cursor: 'pointer',
+  transition: 'background 0.15s, color 0.15s',
 }
 
-const defaultCar: GarageCar = {
-  id: '1',
-  brand: 'BMW',
-  model: 'SERIE 1',
-  version: '130i M Sport Package 3.0L',
-  year: 2009,
-  km: 142500,
-  plate: 'HXC 704',
-};
+export default function CarShowcase({ car }: { car: GarageCar }) {
+  const [openPanel, setOpenPanel] = useState<Panel>(null)
+  const [shutterOpen, setShutterOpen] = useState(false)
 
-const defaultGarageCarImage = '/cars/Bmw-serie1-frente.jpeg';
-const garageBackgroundImage = '/cars/garage.jpeg';
+  const bitacora   = demoBitacora.filter((e) => e.carId === car.id)
+  const totalGasto = bitacora.reduce((acc, e) => acc + e.cost, 0)
 
-const notificationBadgeStyle: React.CSSProperties = {
-  background: '#e3df05',
-  color: '#000',
-  borderRadius: '50%',
-  width: '18px',
-  height: '18px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '0.7rem',
-  fontWeight: 'bold',
-  marginLeft: 'auto',
-};
+  const carImage = car.photoFront ?? '/cars/bmw_frente_gt.png'
 
-export default function CarShowcase({ car = defaultCar }: { car?: GarageCar }) {
-  const [shutterOpen, setShutterOpen] = useState(false);
-
+  // Shutter animation: starts closed, opens after 1s delay
   useEffect(() => {
-    setShutterOpen(false);
-    const timer = setTimeout(() => setShutterOpen(true), 1000);
-    return () => clearTimeout(timer);
-  }, [car.id]);
+    setShutterOpen(false)
+    const timer = setTimeout(() => setShutterOpen(true), 1000)
+    return () => clearTimeout(timer)
+  }, [car.id])
 
-  const carImage = car.photoFront ?? defaultGarageCarImage;
+  function toggle(panel: 'bitacora' | 'stats') {
+    setOpenPanel((prev) => (prev === panel ? null : panel))
+  }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden flex" style={{ background: '#0a0a0a' }}>
+    <div className="flex-1 relative overflow-hidden" style={{ background: '#07090b' }}>
 
-      {/* ── SECCIÓN IZQUIERDA: EL GARAGE ── */}
-      <div className="flex-1 flex flex-col relative" style={{ zIndex: 10 }}>
+      {/* ═══════════════════════════════════════
+          GARAGE BACKGROUND IMAGE
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'url(/cars/garage.jpeg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        filter: 'brightness(0.72) saturate(0.6)',
+      }} />
 
-        {/* Header Superior */}
-        <div className="flex items-center justify-between px-6 py-4" style={{ zIndex: 30 }}>
-          <span className="text-xs tracking-widest cursor-pointer" style={{ color: 'hsl(var(--foreground))' }}>
-            ← VOLVER
-          </span>
-          <div className="text-center">
-            <h1 className="text-sm font-black tracking-[0.3em]" style={{ color: 'hsl(var(--foreground))' }}>
-              MI GARAGE
-            </h1>
-          </div>
-          <div style={{ width: '60px' }} />
-        </div>
+      {/* Dark overlay on interior area to make car pop */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(4,5,7,0.55) 55%, rgba(4,5,7,0.82) 100%)',
+      }} />
 
-        {/* MARCO DEL VISUALIZADOR */}
-        <div className="flex-1 relative mx-4 mb-2 overflow-hidden rounded-sm" style={{ border: '1px solid #222' }}>
-
-          {/* Fondo del Garage */}
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${garageBackgroundImage})`, filter: 'brightness(0.7)' }}
-          />
-
-          {/* Suelo Negro */}
-          <div
-            className="absolute bottom-0 left-0 right-0"
-            style={{ height: '15%', background: 'linear-gradient(to top, #000 60%, transparent)' }}
-          />
-
-          {/* El Auto */}
-          <div className="absolute inset-0 flex items-end justify-center" style={{ paddingBottom: '5%' }}>
-            <img
-              src={carImage}
-              alt={`${car.brand} ${car.model}`}
-              className="object-contain drop-shadow-2xl"
-              style={{ maxHeight: '75%', maxWidth: '85%' }}
-            />
-          </div>
-
-          {/* Persiana Industrial */}
-          <div
-            className="absolute inset-0 origin-top"
-            style={{
-              transform: shutterOpen ? 'scaleY(0)' : 'scaleY(1)',
-              transition: 'transform 1.8s cubic-bezier(0.22, 1, 0.36, 1)',
-              backgroundImage:
-                'repeating-linear-gradient(180deg, hsl(0 0% 28%) 0px, hsl(0 0% 35%) 3px, hsl(0 0% 22%) 6px, hsl(0 0% 30%) 9px)',
-              zIndex: 20,
-            }}
-          >
-            <div
-              className="absolute bottom-0 left-0 right-0"
-              style={{ height: '30px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}
-            />
-          </div>
-
-          {/* Vignette */}
-          <div className="absolute inset-0 shadow-[inset_0_0_80px_20px_rgba(0,0,0,0.6)]" />
-        </div>
-
-        {/* Info Inferior del Vehículo */}
-        <div className="px-6 py-3">
-          <h2 className="text-xl font-black tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-            {car.brand} {car.model}
-          </h2>
-          <p className="text-xs mt-1 tracking-wide" style={{ color: 'hsl(var(--foreground) / 0.4)' }}>
-            {car.version} · {car.year} · {car.km.toLocaleString('es-AR')} KM
-          </p>
-        </div>
-      </div>
-
-      {/* ── PANEL LATERAL DERECHO ── */}
+      {/* ═══════════════════════════════════════
+          GARAGE SHUTTER — animates open on car change
+      ═══════════════════════════════════════ */}
       <div
-        className="flex flex-col"
+        className="absolute inset-0 origin-top"
         style={{
-          width: '280px',
-          background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
-          borderLeft: '1px solid #1a1a1a',
+          transform: shutterOpen ? 'scaleY(0)' : 'scaleY(1)',
+          transition: 'transform 1.8s cubic-bezier(0.22, 1, 0.36, 1)',
+          backgroundImage: 'repeating-linear-gradient(180deg, hsl(0 0% 28%) 0px, hsl(0 0% 35%) 3px, hsl(0 0% 22%) 6px, hsl(0 0% 30%) 9px)',
           zIndex: 20,
         }}
       >
-        {/* Estado Superior */}
-        <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          <span style={{ color: '#4ade80', fontSize: '0.5rem' }}>●</span>
-          <span className="text-xs font-bold tracking-wider" style={{ color: '#fff' }}>JUAMPI</span>
-          <span className="text-xs ml-auto" style={{ color: '#555' }}>1 AUTO</span>
+        <div className="absolute bottom-0 left-0 right-0" style={{ height: '30px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          BUTTONS — overlaid on the shutter area
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', top: '15%', left: 14, right: 14,
+        display: 'flex', gap: 10, zIndex: 10,
+      }}>
+        <button
+          className="font-condensed"
+          onClick={() => toggle('bitacora')}
+          style={{
+            ...BTN_BASE,
+            background: openPanel === 'bitacora' ? 'rgba(240,224,64,0.95)' : 'rgba(10,8,6,0.65)',
+            color: openPanel === 'bitacora' ? '#1a1600' : '#fff',
+            borderColor: openPanel === 'bitacora' ? 'transparent' : 'rgba(255,255,255,0.25)',
+            backdropFilter: 'blur(4px)',
+            padding: '7px 0',
+            fontSize: '0.8rem',
+          }}
+        >
+          BITÁCORA
+        </button>
+        <button
+          className="font-condensed"
+          onClick={() => toggle('stats')}
+          style={{
+            ...BTN_BASE,
+            background: openPanel === 'stats' ? 'rgba(240,224,64,0.95)' : 'rgba(10,8,6,0.65)',
+            color: openPanel === 'stats' ? '#1a1600' : '#fff',
+            borderColor: openPanel === 'stats' ? 'transparent' : 'rgba(255,255,255,0.25)',
+            backdropFilter: 'blur(4px)',
+            padding: '7px 0',
+            fontSize: '0.8rem',
+          }}
+        >
+          ESTADÍSTICAS
+        </button>
+      </div>
+
+      {/* ═══════════════════════════════════════
+          CAR IMAGE — sits in the garage opening
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 80,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        zIndex: 5,
+      }}>
+        <img
+          src={carImage}
+          alt={`${car.brand} ${car.model}`}
+          style={{
+            width: '98%',
+            maxHeight: '64vh',
+            objectFit: 'contain',
+            objectPosition: 'bottom center',
+            display: 'block',
+            filter: 'drop-shadow(0 20px 45px rgba(0,0,0,0.9))',
+          }}
+        />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          CAR INFO — bottom overlay
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6,
+        padding: '0 20px 20px',
+        pointerEvents: 'none',
+      }}>
+        <div
+          className="font-condensed font-black italic uppercase"
+          style={{ fontSize: '1.65rem', color: '#fff', lineHeight: 1, letterSpacing: '0.04em', textShadow: '0 2px 12px rgba(0,0,0,0.9)' }}
+        >
+          {car.brand}{' '}
+          <span style={{ color: 'var(--yellow)' }}>{car.model}</span>
         </div>
-
-        {/* Perfil */}
-        <div className="flex items-center gap-3 px-4 py-4" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          <div
-            className="flex items-center justify-center rounded-full font-black text-lg"
-            style={{
-              width: '48px',
-              height: '48px',
-              background: 'linear-gradient(135deg, hsl(var(--foreground)), #b8860b)',
-              color: '#000',
-            }}
-          >
-            J
-          </div>
-          <div>
-            <p className="font-bold text-sm" style={{ color: '#fff' }}>JUAMPI</p>
-            <p className="text-xs" style={{ color: '#666' }}>Comprador · Buenos Aires</p>
-          </div>
+        <div
+          className="font-condensed"
+          style={{ fontSize: '0.84rem', color: 'var(--gray)', marginTop: 5, letterSpacing: '0.02em' }}
+        >
+          {car.version} · {car.year} · {car.km.toLocaleString('es-AR')} km
         </div>
-
-        {/* Estadísticas */}
-        <div className="grid grid-cols-3 text-center py-3" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          {[
-            { value: '1', label: 'AUTO' },
-            { value: '6', label: 'COMPRAS' },
-            { value: '7', label: 'FAVORITOS' },
-          ].map((stat) => (
-            <div key={stat.label}>
-              <p className="text-lg font-black" style={{ color: 'hsl(var(--foreground))' }}>{stat.value}</p>
-              <p className="text-[0.6rem] tracking-wider" style={{ color: '#555' }}>{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Menú */}
-        <nav className="flex-1 overflow-y-auto py-2">
-          {/* Elemento activo */}
-          <div
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-            style={{ background: 'rgba(255,200,0,0.08)', borderLeft: '3px solid hsl(var(--foreground))' }}
-          >
-            <span style={{ fontSize: '1.2rem' }}>🚗</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold" style={{ color: 'hsl(var(--foreground))' }}>MIS AUTOS</p>
-              <p className="text-[0.65rem] truncate" style={{ color: '#666' }}>{car.brand} {car.model}</p>
-            </div>
-            <span
-              className="flex items-center justify-center rounded-full text-xs font-bold"
-              style={{
-                width: '20px',
-                height: '20px',
-                background: 'hsl(var(--foreground))',
-                color: '#000',
-              }}
-            >
-              1
-            </span>
-          </div>
-
-          {/* Resto del menú */}
-          {[
-            { icon: '📦', title: 'MIS COMPRAS', subtitle: 'Último pedido hace 3 días' },
-            { icon: '⭐', title: 'FAVORITOS', subtitle: '7 repuestos guardados', notification: '7' },
-            { icon: '🔔', title: 'ALERTAS', subtitle: '2 novedades para tu BMW', notification: '2' },
-            { icon: '👤', title: 'MI PERFIL', subtitle: '' },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
-              style={{ borderLeft: '3px solid transparent' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold" style={{ color: '#aaa' }}>{item.title}</p>
-                {item.subtitle && <p className="text-[0.65rem] truncate" style={{ color: '#444' }}>{item.subtitle}</p>}
-              </div>
-              {item.notification && <span style={notificationBadgeStyle}>{item.notification}</span>}
-            </div>
-          ))}
-        </nav>
-
-        {/* Footer */}
-        <div className="px-4 py-3 flex items-center justify-between" style={{ borderTop: '1px solid #1a1a1a' }}>
-          <span className="text-[0.6rem] tracking-wider" style={{ color: '#333' }}>USER ID: 00492_JP</span>
-          <span className="text-[0.6rem]" style={{ color: '#4ade80' }}>● ONLINE</span>
+        <div
+          className="font-condensed font-bold uppercase"
+          style={{
+            display: 'inline-block',
+            marginTop: 10,
+            background: 'rgba(240,224,64,0.1)',
+            border: '1px solid rgba(240,224,64,0.38)',
+            color: 'var(--yellow)',
+            fontSize: '0.68rem',
+            letterSpacing: '0.15em',
+            padding: '3px 11px',
+            borderRadius: 3,
+          }}
+        >
+          {car.plate}
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════
+          SLIDING PANEL — left to right
+      ═══════════════════════════════════════ */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, bottom: 0, width: '100%',
+        zIndex: 30,
+        transform: openPanel ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.34s cubic-bezier(0.4, 0, 0.2, 1)',
+        background: 'rgba(7, 9, 11, 0.98)',
+        display: 'flex', flexDirection: 'column',
+      }}>
+
+        {/* Panel header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+          background: 'rgba(255,255,255,0.02)',
+        }}>
+          <div
+            className="font-condensed font-black italic uppercase"
+            style={{ fontSize: '1.05rem', color: 'var(--yellow)', letterSpacing: '0.08em' }}
+          >
+            {openPanel === 'bitacora' ? 'BITÁCORA' : 'ESTADÍSTICAS'}
+          </div>
+          <button
+            onClick={() => setOpenPanel(null)}
+            className="font-condensed font-bold"
+            style={{
+              background: 'none', border: '1px solid rgba(255,255,255,0.12)',
+              color: 'var(--gray)', cursor: 'pointer',
+              fontSize: '0.7rem', letterSpacing: '0.1em',
+              padding: '4px 10px', borderRadius: 4,
+            }}
+          >
+            ✕ CERRAR
+          </button>
+        </div>
+
+        {/* Panel scrollable content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
+
+          {/* ── BITÁCORA ── */}
+          {openPanel === 'bitacora' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {bitacora.map((entry) => (
+                <div
+                  key={entry.id}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    padding: 12, borderRadius: 8,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div
+                    className="font-condensed font-black uppercase text-center"
+                    style={{
+                      background: `${typeColors[entry.type]}15`,
+                      border: `1px solid ${typeColors[entry.type]}35`,
+                      color: typeColors[entry.type],
+                      fontSize: '0.57rem', letterSpacing: '0.08em',
+                      padding: '2px 8px', borderRadius: 3,
+                      marginTop: 2, whiteSpace: 'nowrap', flexShrink: 0,
+                    }}
+                  >
+                    {typeLabels[entry.type]}
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <div
+                        className="font-condensed font-bold uppercase"
+                        style={{ fontSize: '0.87rem', color: '#fff', letterSpacing: '0.04em', lineHeight: 1.2 }}
+                      >
+                        {entry.description}
+                      </div>
+                      {entry.cost > 0 && (
+                        <div
+                          className="font-condensed font-black"
+                          style={{ fontSize: '0.9rem', color: 'var(--yellow)', flexShrink: 0 }}
+                        >
+                          ${entry.cost.toLocaleString('es-AR')}
+                        </div>
+                      )}
+                    </div>
+
+                    {entry.parts && entry.parts.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, marginTop: 6 }}>
+                        {entry.parts.map((p) => (
+                          <span
+                            key={p}
+                            className="font-condensed"
+                            style={{
+                              fontSize: '0.63rem',
+                              background: 'rgba(255,255,255,0.07)',
+                              border: '1px solid rgba(255,255,255,0.09)',
+                              color: 'var(--gray2)',
+                              padding: '1px 7px', borderRadius: 3,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: '0.65rem', color: 'var(--gray)' }}>
+                      <span>
+                        {new Date(entry.date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </span>
+                      <span>{entry.km.toLocaleString('es-AR')} km</span>
+                      {entry.seller && <span>{entry.seller}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                className="font-condensed font-bold uppercase"
+                style={{
+                  background: 'none',
+                  border: '1px dashed rgba(255,255,255,0.1)',
+                  color: 'var(--gray)',
+                  fontSize: '0.76rem', letterSpacing: '0.1em',
+                  padding: '11px 0', borderRadius: 8,
+                  cursor: 'pointer', width: '100%', marginTop: 4,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(240,224,64,0.4)'
+                  e.currentTarget.style.color = 'var(--yellow)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                  e.currentTarget.style.color = 'var(--gray)'
+                }}
+              >
+                + AGREGAR ENTRADA
+              </button>
+            </div>
+          )}
+
+          {/* ── ESTADÍSTICAS ── */}
+          {openPanel === 'stats' && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+              {[
+                { label: 'Total invertido',      value: `$${totalGasto.toLocaleString('es-AR')}`, accent: true  },
+                { label: 'Entradas bitácora',     value: String(bitacora.length),                  accent: false },
+                { label: 'Último service',        value: '139.500 km',                             accent: false },
+                { label: 'Próximo service',       value: '150.000 km',                             accent: false },
+              ].map(({ label, value, accent }) => (
+                <div
+                  key={label}
+                  style={{
+                    padding: '14px 12px', borderRadius: 8,
+                    background: accent ? 'rgba(240,224,64,0.06)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${accent ? 'rgba(240,224,64,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                  }}
+                >
+                  <div
+                    className="font-condensed font-black"
+                    style={{ fontSize: '1.4rem', color: accent ? 'var(--yellow)' : '#fff', lineHeight: 1 }}
+                  >
+                    {value}
+                  </div>
+                  <div
+                    className="font-condensed uppercase"
+                    style={{ fontSize: '0.64rem', color: 'var(--gray)', letterSpacing: '0.1em', marginTop: 4 }}
+                  >
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+      </div>
+
     </div>
-  );
+  )
 }
