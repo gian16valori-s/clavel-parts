@@ -382,6 +382,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   const [nombre, setNombre] = useState("");
   const [numeroParteOem, setNumeroParteOem] = useState("");
   const [marca, setMarca] = useState("");
+  const [familiaProducto, setFamiliaProducto] = useState<"general" | "tre_performance">("general");
   const [precio, setPrecio] = useState<number | "">("");
   const [stock, setStock] = useState<number | "">(0);
   const [imageFiles, setImageFiles] = useState<(File | null)[]>([null, null, null]);
@@ -499,6 +500,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     setSelectedVersiones([]);
     setNombre("");
     setMarca("");
+    setFamiliaProducto("general");
     setPrecio("");
     setStock(0);
     setImageFiles([null, null, null]);
@@ -565,6 +567,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           grupo_id: Number(grupoId) || null,
           subgrupo_id: Number(subgrupoId) || null,
           marca_pieza: marca.trim(),
+          familia: familiaProducto === "tre_performance" ? "tre_performance" : null,
           numero_parte_oem: numeroParteOem.trim() || null,
           precio: precioNum,
           stock: stockNum,
@@ -1044,6 +1047,19 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 required
                 style={inputStyle}
               />
+
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Destino del producto</label>
+              <select
+                value={familiaProducto}
+                onChange={(e) => setFamiliaProducto(e.target.value as "general" | "tre_performance")}
+                style={inputStyle}
+              >
+                <option value="general">Catalogo general</option>
+                <option value="tre_performance">The Racer&apos;s Edge Performance</option>
+              </select>
+              <div style={{ color: "#6b7280", fontSize: 13, marginTop: -6, marginBottom: 12, lineHeight: 1.4 }}>
+                Elegi TRE Performance para que el producto aparezca en la seccion The Racer&apos;s Edge y en sus menus de vehiculos.
+              </div>
 
               <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Precio</label>
               <input

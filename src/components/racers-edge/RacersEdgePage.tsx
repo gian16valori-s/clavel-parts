@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAppStore } from '@/lib/cartStore'
+import { getTREProducts } from '@/lib/supabaseTRE'
+import { mapCatalogProductToTREProduct } from '@/lib/treCatalogMapping'
 import {
   reProducts, RE_CATEGORIES, CATEGORY_COLOR,
   type REProduct, type RECategory,
@@ -168,10 +170,61 @@ function ProductCard({ product }: { product: REProduct }) {
 export default function RacersEdgePage() {
   const { setView, vehicle } = useAppStore()
   const [activeCategory, setActiveCategory] = useState<RECategory | 'todos'>('todos')
+  const [catalogProducts, setCatalogProducts] = useState<REProduct[]>(reProducts)
+  const [catalogLoading, setCatalogLoading] = useState(false)
 
-  const filtered = activeCategory === 'todos'
-    ? reProducts
-    : reProducts.filter((p) => p.category === activeCategory)
+  useEffect(() => {
+    let cancelled = false
+
+    const loadProducts = async () => {
+      setCatalogLoading(true)
+
+      // Map activeCategory to Supabase grupo name
+      const grupoMap: Record<string, string> = {
+        motor: 'Motor',
+        turbo: 'Turbo',
+        frenos: 'Frenos',
+        suspension: 'Suspensión',
+        escape: 'Escape',
+        llantas: 'Llantas',
+        body: 'Body',
+        interior: 'Interior',
+        electronica: 'Electrónica',
+      }
+
+      const products = await getTREProducts(
+        vehicle
+          ? {
+              marca: vehicle.brand,
+              modelo: vehicle.model,
+              grupo: activeCategory !== 'todos' ? grupoMap[activeCategory] : undefined,
+            }
+          : undefined
+      )
+
+      if (cancelled) return
+
+      setCatalogProducts(products.length > 0 ? products.map(mapCatalogProductToTREProduct) : reProducts)
+      setCatalogLoading(false)
+    }
+
+    void loadProducts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [vehicle, activeCategory])
+
+  const filtered = useMemo(
+    () => (activeCategory === 'todos'
+      ? catalogProducts
+      : catalogProducts.filter((p) => p.category === activeCategory)),
+    [activeCategory, catalogProducts]
+  )
+
+  const vehicleLabel = vehicle
+    ? [vehicle.brand, vehicle.model, vehicle.year !== 'TRE' ? vehicle.year : ''].filter(Boolean).join(' · ')
+    : ''
 
   return (
     <div style={{
@@ -276,7 +329,7 @@ export default function RacersEdgePage() {
           >
             <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em', marginBottom: 1 }}>FILTRANDO PARA</div>
             <div style={{ fontWeight: 800, color: '#fff' }}>
-              {vehicle.brand} {vehicle.model} · {vehicle.year}
+              {vehicleLabel}
             </div>
           </div>
         ) : (
@@ -359,6 +412,18 @@ export default function RacersEdgePage() {
           PRODUCT GRID
       ═══════════════════════════════════════════ */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem 2rem' }}>
+        {catalogLoading && (
+          <div style={{
+            marginBottom: '1rem',
+            fontFamily: '"Barlow Condensed", sans-serif',
+            fontSize: '0.9rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.45)',
+          }}>
+            Cargando catálogo TRE...
+          </div>
+        )}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
