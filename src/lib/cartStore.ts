@@ -44,8 +44,8 @@ interface AppState {
   clearSearchQuery: () => void
 
   // UI state
-  currentView: 'home' | 'results' | 'cart' | 'garage' | 'racers-edge'
-  setView: (v: 'home' | 'results' | 'cart' | 'garage' | 'racers-edge') => void
+  currentView: 'home' | 'results' | 'cart' | 'garage' | 'racers-edge-home' | 'racers-edge-catalog'
+  setView: (v: 'home' | 'results' | 'cart' | 'garage' | 'racers-edge-home' | 'racers-edge-catalog') => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({

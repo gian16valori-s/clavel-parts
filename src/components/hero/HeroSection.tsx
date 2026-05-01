@@ -27,7 +27,7 @@ export default function HeroSection() {
       style={{
         display: 'grid',
         overflow: 'hidden',
-        gridTemplateColumns: '400px minmax(0, 1fr)',
+        gridTemplateColumns: 'clamp(250px, 30%, 400px) minmax(0, 1fr)',
         minHeight: 'calc(100vh - 126px)',
         height: 'calc(100vh - 126px)',
       }}

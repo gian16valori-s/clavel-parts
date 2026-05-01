@@ -14,7 +14,7 @@ export default function Navbar() {
   const { setView } = useAppStore()
   return (
     <nav
-      className="sticky z-[299] flex items-center px-10 border-b-2"
+      className="sticky z-[299] flex items-center px-10 border-b-2 overflow-x-auto"
       style={{ background: 'var(--slate)', top: 78, height: 48, borderColor: 'var(--dark)' }}
     >
       {/* Login */}
@@ -58,7 +58,7 @@ export default function Navbar() {
           <a
             href="#"
             className="nav-link nav-link-hl"
-            onClick={(e) => { e.preventDefault(); setView('racers-edge') }}
+            onClick={(e) => { e.preventDefault(); setView('racers-edge-home') }}
           >
             THE RACERS EDGE ⚡
           </a>
@@ -82,6 +82,7 @@ export default function Navbar() {
           border-right: 1px solid rgba(255,255,255,0.06);
           transition: background 0.15s, color 0.15s;
           white-space: nowrap;
+          flex-shrink: 0;
         }
         .nav-link:hover {
           background: var(--slate2);
@@ -92,7 +93,8 @@ export default function Navbar() {
           color: var(--white) !important;
           justify-content: center;
           text-align: center;
-          min-width: 182px;
+          min-width: fit-content;
+          flex-shrink: 0;
           border-right: none;
         }
         .nav-link-hl:hover {

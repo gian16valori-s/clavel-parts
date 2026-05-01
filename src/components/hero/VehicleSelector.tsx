@@ -146,8 +146,8 @@ export default function VehicleSelector() {
 
   return (
     <div
-      className="flex flex-col justify-center gap-[0.85rem] px-[1.8rem] py-8 border-r-2"
-      style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', width: 400, minHeight: 'calc(100vh - 126px)' }}
+      className="flex flex-col justify-center gap-[0.85rem] px-[1.8rem] py-8 border-r-2 w-full"
+      style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', minHeight: 'calc(100vh - 126px)' }}
     >
       <p
         className="text-center font-condensed font-black italic uppercase text-white mb-1"

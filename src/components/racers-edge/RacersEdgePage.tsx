@@ -204,7 +204,7 @@ export default function RacersEdgePage() {
 
         {/* VOLVER */}
         <button
-          onClick={() => setView('home')}
+          onClick={() => setView('racers-edge-home')}
           style={{
             fontFamily: '"Barlow Condensed", sans-serif',
             fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em',

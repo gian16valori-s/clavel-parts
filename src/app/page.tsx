@@ -14,6 +14,7 @@ import WaitlistSection  from '@/components/sections/WaitlistSection'
 import ResultsGrid      from '@/components/results/ResultsGrid'
 import CartPage         from '@/components/cart/CartPage'
 import GaragePage       from '@/components/garage/GaragePage'
+import RacersEdgeHome   from '@/components/racers-edge/RacersEdgeHome'
 import RacersEdgePage   from '@/components/racers-edge/RacersEdgePage'
 import ChatBot          from '@/components/ui/ChatBot'
 
@@ -26,7 +27,8 @@ export default function Home() {
       {currentView === 'results'     && <ResultsGrid />}
       {currentView === 'cart'        && <CartPage />}
       {currentView === 'garage'      && <GaragePage />}
-      {currentView === 'racers-edge' && <RacersEdgePage />}
+      {currentView === 'racers-edge-home'    && <RacersEdgeHome />}
+      {currentView === 'racers-edge-catalog' && <RacersEdgePage />}
 
       {/* ── Landing (visible solo en home) ── */}
       <div style={{ display: currentView === 'home' ? 'block' : 'none' }}>
