@@ -60,7 +60,7 @@ export default function Navbar() {
             className="nav-link nav-link-hl"
             onClick={(e) => { e.preventDefault(); setView('racers-edge-home') }}
           >
-            THE RACERS EDGE ⚡
+            THE RACER'S EDGE
           </a>
         </div>
       </div>
