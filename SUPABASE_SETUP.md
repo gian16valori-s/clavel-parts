@@ -31,7 +31,7 @@ Las conseguís en **Supabase → Settings → API**.
 
 En el SQL Editor de Supabase ejecutá:
 
-1. `supabase/schema.sql`
+1. `supabase/migrations/schema.sql`
 2. `supabase/seed_demo.sql`
 
 Eso te crea estas entidades:
