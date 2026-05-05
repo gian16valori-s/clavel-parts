@@ -11,8 +11,16 @@ type ProductoEditable = {
   id: number
   sku: string
   producto: string
+  descripcion_corta: string | null
+  descripcion_larga: string | null
   marca_pieza: string | null
   numero_parte_oem: string | null
+  material: string | null
+  garantia_meses: number | null
+  peso_kg: number | null
+  alto_cm: number | null
+  ancho_cm: number | null
+  largo_cm: number | null
   precio: number | null
   stock: number | null
   activo: boolean | null
@@ -51,8 +59,16 @@ export default function PanelProductosPage() {
   const [productos, setProductos] = useState<ProductoVendedorResumen[]>([])
   const [editingProduct, setEditingProduct] = useState<ProductoEditable | null>(null)
   const [editNombre, setEditNombre] = useState('')
+  const [editDescripcionCorta, setEditDescripcionCorta] = useState('')
+  const [editDescripcionLarga, setEditDescripcionLarga] = useState('')
   const [editMarca, setEditMarca] = useState('')
   const [editNumeroParte, setEditNumeroParte] = useState('')
+  const [editMaterial, setEditMaterial] = useState('')
+  const [editGarantiaMeses, setEditGarantiaMeses] = useState<number | ''>('')
+  const [editPesoKg, setEditPesoKg] = useState<number | ''>('')
+  const [editAltoCm, setEditAltoCm] = useState<number | ''>('')
+  const [editAnchoCm, setEditAnchoCm] = useState<number | ''>('')
+  const [editLargoCm, setEditLargoCm] = useState<number | ''>('')
   const [editPrecio, setEditPrecio] = useState<number | ''>('')
   const [editStock, setEditStock] = useState<number | ''>('')
   const [editActivo, setEditActivo] = useState(true)
@@ -111,6 +127,14 @@ export default function PanelProductosPage() {
     setSavingEdit(false)
     setDeletingProduct(false)
     setImageSlots(emptySlots())
+    setEditDescripcionCorta('')
+    setEditDescripcionLarga('')
+    setEditMaterial('')
+    setEditGarantiaMeses('')
+    setEditPesoKg('')
+    setEditAltoCm('')
+    setEditAnchoCm('')
+    setEditLargoCm('')
   }
 
   async function openEditor(productId: number) {
@@ -122,7 +146,7 @@ export default function PanelProductosPage() {
     try {
       const { data, error: fetchError } = await supabase
         .from('productos')
-        .select('id, sku, producto, marca_pieza, numero_parte_oem, precio, stock, activo, liquidacion, vendedor_id')
+        .select('id, sku, producto, descripcion_corta, descripcion_larga, marca_pieza, numero_parte_oem, material, garantia_meses, peso_kg, alto_cm, ancho_cm, largo_cm, precio, stock, activo, liquidacion, vendedor_id')
         .eq('id', productId)
         .eq('vendedor_id', vendedor.id)
         .single()
@@ -134,8 +158,16 @@ export default function PanelProductosPage() {
       const product = data as ProductoEditable
       setEditingProduct(product)
       setEditNombre(product.producto || '')
+      setEditDescripcionCorta(product.descripcion_corta || '')
+      setEditDescripcionLarga(product.descripcion_larga || '')
       setEditMarca(product.marca_pieza || '')
       setEditNumeroParte(product.numero_parte_oem || '')
+      setEditMaterial(product.material || '')
+      setEditGarantiaMeses(product.garantia_meses ?? '')
+      setEditPesoKg(product.peso_kg ?? '')
+      setEditAltoCm(product.alto_cm ?? '')
+      setEditAnchoCm(product.ancho_cm ?? '')
+      setEditLargoCm(product.largo_cm ?? '')
       setEditPrecio(Number(product.precio ?? 0))
       setEditStock(Number(product.stock ?? 0))
       setEditActivo(product.activo !== false)
@@ -222,8 +254,16 @@ export default function PanelProductosPage() {
         .from('productos')
         .update({
           producto: editNombre.trim(),
+          descripcion_corta: editDescripcionCorta.trim() || null,
+          descripcion_larga: editDescripcionLarga.trim() || null,
           marca_pieza: editMarca.trim(),
           numero_parte_oem: editNumeroParte.trim() || null,
+          material: editMaterial.trim() || null,
+          garantia_meses: editGarantiaMeses === '' ? null : Number(editGarantiaMeses),
+          peso_kg: editPesoKg === '' ? null : Number(editPesoKg),
+          alto_cm: editAltoCm === '' ? null : Number(editAltoCm),
+          ancho_cm: editAnchoCm === '' ? null : Number(editAnchoCm),
+          largo_cm: editLargoCm === '' ? null : Number(editLargoCm),
           precio: precioNum,
           stock: stockNum,
           activo: editActivo,
@@ -514,6 +554,25 @@ export default function PanelProductosPage() {
                       style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Descripción corta</label>
+                    <input
+                      value={editDescripcionCorta}
+                      onChange={(e) => setEditDescripcionCorta(e.target.value)}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Descripción larga</label>
+                    <textarea
+                      value={editDescripcionLarga}
+                      onChange={(e) => setEditDescripcionLarga(e.target.value)}
+                      rows={5}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db', resize: 'vertical' }}
+                    />
+                  </div>
                   <div>
                     <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Marca</label>
                     <input
@@ -528,6 +587,74 @@ export default function PanelProductosPage() {
                     <input
                       value={editNumeroParte}
                       onChange={(e) => setEditNumeroParte(e.target.value)}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Material</label>
+                    <input
+                      value={editMaterial}
+                      onChange={(e) => setEditMaterial(e.target.value)}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Garantía (meses)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={editGarantiaMeses}
+                      onChange={(e) => setEditGarantiaMeses(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Peso (kg)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.001"
+                      value={editPesoKg}
+                      onChange={(e) => setEditPesoKg(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Alto (cm)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editAltoCm}
+                      onChange={(e) => setEditAltoCm(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Ancho (cm)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editAnchoCm}
+                      onChange={(e) => setEditAnchoCm(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full rounded-md px-3 py-2"
+                      style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1" style={{ color: 'var(--gray2)', fontWeight: 600 }}>Largo (cm)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editLargoCm}
+                      onChange={(e) => setEditLargoCm(e.target.value ? Number(e.target.value) : '')}
                       className="w-full rounded-md px-3 py-2"
                       style={{ background: '#fff', color: '#111827', border: '1px solid #d1d5db' }}
                     />

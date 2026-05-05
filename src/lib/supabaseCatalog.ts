@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { CartProduct, SelectedVehicle } from './cartStore'
 
 interface CatalogRow {
+  product_id?: number | null
   marca: string
   modelo: string
   anio: number
@@ -20,7 +21,8 @@ interface CatalogRow {
   liquidacion: boolean | null
   activo: boolean | null
   especificaciones?: Record<string, unknown> | null
-  vendedor: string | null
+  vendedor?: string | null
+  vendedor_id?: number | null
 }
 
 interface ProductImageRow {
@@ -120,12 +122,12 @@ export async function getCatalogProducts(
     }
 
     return rows.map((item, index) => ({
-      id: `${item.sku}-${index}`,
+      id: String(item.product_id ?? `${item.sku}-${index}`),
       name: item.producto,
       brand: item.marca_pieza || 'Sin marca',
       ref: item.numero_parte_oem || item.sku || 'S/N',
       price: Number(item.precio_oferta ?? item.precio ?? 0),
-      seller: item.vendedor || 'Vendedor verificado',
+      seller: item.vendedor || (item.vendedor_id ? `Vendedor #${item.vendedor_id}` : 'Vendedor verificado'),
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),

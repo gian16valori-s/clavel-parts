@@ -122,6 +122,15 @@ export default function LoginPage() {
           >
             Iniciar sesión como vendedor
           </a>
+          <div className="mt-4 text-center">
+            <a
+              href="/solicitar-vendedor"
+              className="text-sm underline font-condensed font-bold"
+              style={{ color: 'var(--yellow)' }}
+            >
+              Quiero ser vendedor
+            </a>
+          </div>
         </div>
       </div>
     </main>

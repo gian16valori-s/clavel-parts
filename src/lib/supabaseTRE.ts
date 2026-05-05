@@ -77,18 +77,19 @@ export async function getTREProducts(filters?: {
 
     // Mapeamos manualmente para no duplicar lógica
     return ((data ?? []) as Array<{
+      product_id?: number | null
       marca: string; modelo: string; anio: number; version: string; motor_codigo: string
       grupo: string; subgrupo: string; tipo_pieza: string; sku: string; producto: string
       marca_pieza: string | null; numero_parte_oem: string | null; precio: number | null
       precio_oferta: number | null; stock: number | null; liquidacion: boolean | null
-      imagen_url: string | null; vendedor: string | null
+      imagen_url: string | null; vendedor?: string | null; vendedor_id?: number | null
     }>).map((item, index) => ({
-      id: `tre-${item.sku}-${index}`,
+      id: String(item.product_id ?? `tre-${item.sku}-${index}`),
       name: item.producto,
       brand: item.marca_pieza || 'Sin marca',
       ref: item.numero_parte_oem || item.sku || 'S/N',
       price: Number(item.precio_oferta ?? item.precio ?? 0),
-      seller: item.vendedor || 'TRE Verified',
+      seller: item.vendedor || (item.vendedor_id ? `Vendedor #${item.vendedor_id}` : 'TRE Verified'),
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: item.grupo?.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'general',

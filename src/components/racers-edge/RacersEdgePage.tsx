@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/cartStore'
 import { getTREProducts } from '@/lib/supabaseTRE'
 import { mapCatalogProductToTREProduct } from '@/lib/treCatalogMapping'
@@ -17,6 +18,7 @@ const TAG_STYLE: Record<string, React.CSSProperties> = {
 }
 
 function ProductCard({ product }: { product: REProduct }) {
+  const router = useRouter()
   const catColor = CATEGORY_COLOR[product.category]
 
   return (
@@ -30,8 +32,9 @@ function ProductCard({ product }: { product: REProduct }) {
         display: 'flex',
         flexDirection: 'column',
         transition: 'border-color 0.2s, transform 0.15s',
-        cursor: 'default',
+        cursor: 'pointer',
       }}
+      onClick={() => router.push(`/productos/${product.id}`)}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = `${catColor}55`
         e.currentTarget.style.transform = 'translateY(-2px)'
@@ -141,6 +144,7 @@ function ProductCard({ product }: { product: REProduct }) {
             )}
           </div>
           <button
+            type="button"
             style={{
               background: '#cc1111',
               border: 'none',
@@ -156,6 +160,7 @@ function ProductCard({ product }: { product: REProduct }) {
               whiteSpace: 'nowrap',
               transition: 'background 0.15s',
             }}
+            onClick={() => router.push(`/productos/${product.id}`)}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#aa0d0d')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#cc1111')}
           >

@@ -24,6 +24,7 @@ create index if not exists idx_productos_familia
 -- ─────────────────────────────────────────────────────────────
 create or replace view public.vista_tre_catalogo as
 select
+  p.id      as product_id,
   ma.id     as marca_id,
   ma.nombre as marca,
   mo.id     as modelo_id,
@@ -36,6 +37,8 @@ select
   p.tipo_pieza,
   p.sku,
   p.producto,
+  p.descripcion_corta,
+  p.descripcion_larga,
   p.marca_pieza,
   p.numero_parte_oem,
   p.precio,
@@ -43,6 +46,12 @@ select
   p.stock,
   p.liquidacion,
   p.activo,
+  p.material,
+  p.garantia_meses,
+  p.peso_kg,
+  p.alto_cm,
+  p.ancho_cm,
+  p.largo_cm,
   p.especificaciones,
   p.vendedor,
   p.imagen_url,

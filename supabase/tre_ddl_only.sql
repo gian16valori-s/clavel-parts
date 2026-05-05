@@ -12,6 +12,7 @@ CREATE INDEX IF NOT EXISTS idx_productos_familia
 -- 2. Vista catálogo TRE
 CREATE OR REPLACE VIEW public.vista_tre_catalogo AS
 SELECT
+  p.id     AS product_id,
   ma.id     AS marca_id,
   ma.nombre AS marca,
   mo.id     AS modelo_id,
@@ -21,9 +22,9 @@ SELECT
   ve.motor_codigo,
   COALESCE(gr.nombre, 'Otros')   AS grupo,
   COALESCE(sg.nombre, 'General') AS subgrupo,
-  p.tipo_pieza, p.sku, p.producto, p.marca_pieza,
+  p.tipo_pieza, p.sku, p.producto, p.descripcion_corta, p.descripcion_larga, p.marca_pieza,
   p.numero_parte_oem, p.precio, p.precio_oferta, p.stock,
-  p.liquidacion, p.activo, p.especificaciones,
+  p.liquidacion, p.activo, p.material, p.garantia_meses, p.peso_kg, p.alto_cm, p.ancho_cm, p.largo_cm, p.especificaciones,
   p.vendedor, p.imagen_url, p.familia
 FROM public.compatibilidades c
 JOIN public.productos   p  ON p.id  = c.producto_id

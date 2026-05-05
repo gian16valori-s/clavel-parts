@@ -87,13 +87,22 @@ export default function PanelVendedorPage() {
           <p className="mb-6 text-sm" style={{ color: 'var(--gray)' }}>
             Usuario actual: {userEmail || 'sin email'}
           </p>
-          <button
-            onClick={handleLogout}
-            className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
-            style={{ background: 'var(--slate)', color: 'var(--white)' }}
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+            >
+              Home
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--slate)', color: 'var(--white)' }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </main>
     )
@@ -111,6 +120,13 @@ export default function PanelVendedorPage() {
             <p style={{ color: 'var(--gray2)' }}>{userEmail}</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--white)', color: 'var(--text-dark)' }}
+            >
+              Home
+            </button>
             <button
               onClick={() => router.push('/panel/vender')}
               className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
