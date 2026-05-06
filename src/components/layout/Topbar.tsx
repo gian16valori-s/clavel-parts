@@ -2,13 +2,17 @@
 
 import { useAppStore } from '@/lib/cartStore'
 
-export default function Topbar() {
+interface TopbarProps {
+  isSticky?: boolean
+}
+
+export default function Topbar({ isSticky = true }: TopbarProps) {
   const { cartCount, setView } = useAppStore()
   const count = cartCount()
 
   return (
     <header
-      className="sticky top-0 z-[300] flex items-center justify-between px-10 border-b-2"
+      className={`${isSticky ? 'sticky top-0' : ''} z-[300] flex items-center justify-between px-10 border-b-2`}
       style={{ background: 'var(--dark2)', borderColor: 'var(--dark3)', height: 78 }}
     >
       {/* Logo */}

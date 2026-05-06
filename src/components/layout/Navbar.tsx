@@ -10,12 +10,16 @@ const navLinks = [
 
 const rightLinks = ['OFF ROAD Y OUTDOOR']
 
-export default function Navbar() {
+interface NavbarProps {
+  isSticky?: boolean
+}
+
+export default function Navbar({ isSticky = true }: NavbarProps) {
   const { setView } = useAppStore()
   return (
     <nav
-      className="sticky z-[299] flex items-center px-10 border-b-2 overflow-x-auto"
-      style={{ background: 'var(--slate)', top: 78, height: 48, borderColor: 'var(--dark)' }}
+      className={`${isSticky ? 'sticky' : ''} z-[299] flex items-center px-10 border-b-2 overflow-x-auto`}
+      style={{ background: 'var(--slate)', top: isSticky ? 78 : undefined, height: 48, borderColor: 'var(--dark)' }}
     >
       {/* Login */}
       <Link

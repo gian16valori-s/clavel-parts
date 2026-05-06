@@ -7,6 +7,8 @@ import { useAppStore } from '@/lib/cartStore'
 import { markCatalogReturnUrl, readCatalogNavigationSnapshot, saveCatalogNavigationSnapshot } from '@/lib/catalogNavigationState'
 import { getCatalogProducts, type CatalogProduct } from '@/lib/supabaseCatalog'
 import { getCategoryImage } from '@/lib/categoryImages'
+import Topbar from '@/components/layout/Topbar'
+import Navbar from '@/components/layout/Navbar'
 import FiltersPanel from './FiltersPanel'
 import ListingCard from './ListingCard'
 
@@ -427,6 +429,9 @@ export default function ResultsGrid() {
       className="fixed inset-0 z-[400] overflow-y-auto"
       style={{ background: 'var(--dark)' }}
     >
+      <Topbar isSticky={false} />
+      <Navbar isSticky={false} />
+
       <div
         className="sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
         style={{ background: 'var(--dark2)', height: 64, borderColor: 'var(--dark3)' }}

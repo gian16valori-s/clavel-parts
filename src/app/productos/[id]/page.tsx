@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/cartStore'
 import { fetchProductDetail, type ProductDetail } from '@/lib/productDetails'
+import Topbar from '@/components/layout/Topbar'
+import Navbar from '@/components/layout/Navbar'
 
 export default function DetalleProductoPage() {
   const params = useParams<{ id: string }>()
@@ -50,8 +52,12 @@ export default function DetalleProductoPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8" style={{ background: 'linear-gradient(180deg, #f6f7fb 0%, #edf0f6 100%)' }}>
-      <div className="mx-auto w-full max-w-6xl">
+    <>
+      <Topbar isSticky={false} />
+      <Navbar isSticky={false} />
+
+      <main className="min-h-screen px-4 py-8" style={{ background: 'linear-gradient(180deg, #f6f7fb 0%, #edf0f6 100%)' }}>
+        <div className="mx-auto w-full max-w-6xl">
         <button
           type="button"
           onClick={() => router.back()}
@@ -166,11 +172,11 @@ export default function DetalleProductoPage() {
               </div>
             )}
 
-            {/* ...existing code... */}
           </section>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }
 
