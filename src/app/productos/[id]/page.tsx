@@ -102,8 +102,27 @@ export default function DetalleProductoPage() {
               <div className="mb-4 text-sm" style={{ color: '#475569' }}>
                 SKU: {producto.sku} · OEM: {producto.ref} · Stock: {producto.stock}
               </div>
+
               <div className="mb-5 text-4xl font-black" style={{ color: '#111827' }}>
                 ${producto.price.toLocaleString('es-AR')}
+              </div>
+              <div className="flex flex-col gap-3 mb-6">
+                <button
+                  type="button"
+                  className="rounded-xl px-6 py-4 font-bold uppercase"
+                  style={{ background: '#1d4ed8', color: '#fff' }}
+                  onClick={handleAddToCart}
+                >
+                  Comprar ahora
+                </button>
+                <button
+                  type="button"
+                  className="rounded-xl px-6 py-4 font-bold uppercase"
+                  style={{ background: '#facc15', color: '#111827' }}
+                  onClick={handleAddToCart}
+                >
+                  Agregar al carrito
+                </button>
               </div>
             </div>
 
@@ -147,29 +166,7 @@ export default function DetalleProductoPage() {
               </div>
             )}
 
-            <div className="rounded-2xl border p-4" style={{ borderColor: '#dbe2ea' }}>
-              <div className="mb-3 text-sm font-bold uppercase" style={{ color: '#334155' }}>
-                Compra
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  className="rounded-xl px-6 py-4 font-bold uppercase"
-                  style={{ background: '#1d4ed8', color: '#fff' }}
-                  onClick={handleAddToCart}
-                >
-                  Comprar ahora
-                </button>
-                <button
-                  type="button"
-                  className="rounded-xl px-6 py-4 font-bold uppercase"
-                  style={{ background: '#facc15', color: '#111827' }}
-                  onClick={handleAddToCart}
-                >
-                  Agregar al carrito
-                </button>
-              </div>
-            </div>
+            {/* ...existing code... */}
           </section>
         </div>
       </div>

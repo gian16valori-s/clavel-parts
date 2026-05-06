@@ -101,8 +101,6 @@ function normalizeText(value: string) {
 }
 
 function getGrupoDisplayName(nombre: string) {
-  const normalized = normalizeText(nombre);
-  if (normalized === "electricidad interior") return "Interior";
   return nombre;
 }
 

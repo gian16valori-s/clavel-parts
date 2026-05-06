@@ -21,7 +21,7 @@ const MAIN_CATEGORIES = [
   { label: 'Transmisión', aliases: ['Transmisión'] },
   { label: 'Embrague', aliases: ['Embrague'] },
   { label: 'Electricidad', aliases: ['Electricidad'] },
-  { label: 'Interior', aliases: ['Interior', 'Electricidad Interior'] },
+  { label: 'Interior', aliases: ['Interior'] },
   { label: 'A/C y Calefacción', aliases: ['A/C y Calefacción', 'Calefacción', 'Climatización'] },
   { label: 'Inyección y Admisión', aliases: ['Inyección y Admisión', 'Inyección', 'Admisión', 'Combustible / Inyección'] },
   { label: 'Refrigeración', aliases: ['Refrigeración'] },
@@ -208,10 +208,10 @@ const DEMO_CATALOG_PRODUCTS: CatalogProduct[] = [
   createDemoProduct('freno-pastilla-cer', 'Frenos', 'Pastillas', 'Pastillas de freno cerámicas traseras', 'Brembo', 'P06099N', 33800),
   createDemoProduct('freno-liquido-dot4', 'Frenos', 'Líquido', 'Líquido de frenos DOT 4 LV', 'ATE', '706202', 12900, { liquidation: true }),
   createDemoProduct('freno-sensor-desgaste', 'Frenos', 'Sensores', 'Sensor de desgaste de pastillas', 'Textar', '98044300', 8900),
-  createDemoProduct('elec-alt', 'Electricidad', 'Alternador', 'Alternador 120A remanufacturado', 'Bosch', '0121715001', 149000),
-  createDemoProduct('elec-sensor', 'Electricidad', 'Sensores', 'Sensor ABS delantero', 'ATE', '24.0711', 33800),
-  createDemoProduct('elec-arranque', 'Electricidad', 'Arranque', 'Motor de arranque 1.4kW', 'Valeo', '438329', 127000),
-  createDemoProduct('elec-modulo', 'Electricidad', 'Módulos', 'Módulo confort levantavidrios', 'Hella', '5DK 008 214-00', 69200),
+  createDemoProduct('elec-alt', 'Interior', 'Alternador', 'Alternador 120A remanufacturado', 'Bosch', '0121715001', 149000),
+  createDemoProduct('elec-sensor', 'Interior', 'Sensores', 'Sensor ABS delantero', 'ATE', '24.0711', 33800),
+  createDemoProduct('elec-arranque', 'Interior', 'Arranque', 'Motor de arranque 1.4kW', 'Valeo', '438329', 127000),
+  createDemoProduct('elec-modulo', 'Interior', 'Módulos', 'Módulo confort levantavidrios', 'Hella', '5DK 008 214-00', 69200),
   createDemoProduct('int-panel', 'Interior', 'Paneles', 'Panel interior de puerta delantera', 'BMW', '51419123456', 98000, { seller: 'Cabina Premium', stock: 2 }),
   createDemoProduct('int-comando', 'Interior', 'Comandos', 'Botonera levantavidrios conductor', 'BMW', '61319217332', 42900, { seller: 'Cabina Premium', stock: 5 }),
   createDemoProduct('int-tapizado', 'Interior', 'Tapizados', 'Fuelle y perilla de cambios', 'BMW', '25117527252', 38900, { seller: 'Cabina Premium' }),
@@ -243,14 +243,20 @@ function normalizeValue(value: string) {
     .toLowerCase()
 }
 
+function canonicalGroupName(group: string) {
+  const normalized = normalizeValue(group)
+  if (normalized === 'electricidad interior') return 'Interior'
+  return group
+}
+
 function matchesCategory(product: CatalogProduct, category: string) {
   if (category === 'TODOS') return true
   if (category === 'Liquidaciones') return product.liquidation
 
   const categoryConfig = MAIN_CATEGORIES.find((item) => item.label === category)
-  if (!categoryConfig) return product.group === category
+  if (!categoryConfig) return canonicalGroupName(product.group) === category
 
-  const normalizedGroup = normalizeValue(product.group)
+  const normalizedGroup = normalizeValue(canonicalGroupName(product.group))
   return categoryConfig.aliases.some((alias) => normalizeValue(alias) === normalizedGroup)
 }
 
@@ -350,11 +356,17 @@ export default function ResultsGrid() {
       .filter((category) => category.count > 0)
 
     const knownNames = new Set<string>(known.map((item) => item.name))
-    const unknownGroups = Array.from(new Set(catalogProducts.map((product) => product.group).filter(Boolean)))
+    const unknownGroups = Array.from(
+      new Set(
+        catalogProducts
+          .map((product) => canonicalGroupName(product.group))
+          .filter(Boolean)
+      )
+    )
       .filter((groupName) => !knownNames.has(groupName))
       .map((groupName) => ({
         name: groupName,
-        count: catalogProducts.filter((product) => product.group === groupName).length,
+        count: catalogProducts.filter((product) => canonicalGroupName(product.group) === groupName).length,
         image: getCategoryImage(groupName),
       }))
 

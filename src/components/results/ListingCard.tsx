@@ -57,14 +57,15 @@ export default function ListingCard({ product, onAdded, onOpen }: ListingCardPro
       {/* Image area */}
       <div
         className="relative overflow-hidden"
-        style={{ height: 160, background: 'var(--dark3)' }}
+        style={{ aspectRatio: '1 / 1', width: '100%', background: '#fff' }}
       >
         <Image
           src={imageSrc}
           alt={product.name}
           fill
-          className="object-contain p-4"
+          className="object-contain p-1"
           sizes="(max-width: 768px) 100vw, 33vw"
+          style={{ maxWidth: '100%', maxHeight: '100%', imageRendering: 'auto' }}
         />
       </div>
 
