@@ -12,14 +12,23 @@ const rightLinks = ['OFF ROAD Y OUTDOOR']
 
 interface NavbarProps {
   isSticky?: boolean
+  transparent?: boolean
 }
 
-export default function Navbar({ isSticky = true }: NavbarProps) {
+export default function Navbar({ isSticky = true, transparent = false }: NavbarProps) {
   const { setView } = useAppStore()
   return (
     <nav
-      className={`${isSticky ? 'sticky' : ''} z-[299] flex items-center px-10 border-b-2 overflow-x-auto`}
-      style={{ background: 'var(--slate)', top: isSticky ? 78 : undefined, height: 48, borderColor: 'var(--dark)' }}
+      className={`${isSticky ? 'sticky' : transparent ? 'fixed' : ''} z-[350] flex items-center px-10 border-b-2 overflow-x-auto`}
+      style={{
+        background: transparent ? 'rgba(0,0,0,0.55)' : '#000',
+        backdropFilter: transparent ? 'blur(10px)' : undefined,
+        top: (isSticky || transparent) ? 78 : undefined,
+        left: transparent ? 0 : undefined,
+        right: transparent ? 0 : undefined,
+        height: 48,
+        borderColor: transparent ? 'rgba(255,255,255,0.06)' : 'var(--dark)',
+      }}
     >
       {/* Login */}
       <Link
@@ -30,13 +39,13 @@ export default function Navbar({ isSticky = true }: NavbarProps) {
           fontWeight: 700,
           fontSize: '0.9rem',
           letterSpacing: '0.08em',
-          color: 'var(--gray2)',
+            color: '#fff',
           textTransform: 'uppercase',
           borderRight: '1px solid rgba(255,255,255,0.09)',
           textDecoration: 'none',
         }}
         onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray2)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = '#fff')}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-[18px] h-[18px]">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
@@ -76,8 +85,8 @@ export default function Navbar({ isSticky = true }: NavbarProps) {
           font-style: italic;
           font-size: 0.98rem;
           letter-spacing: 0.05em;
-          color: var(--gray2);
-          text-transform: uppercase;
+            color: #fff;
+            text-transform: uppercase;
           text-decoration: none;
           padding: 0 1.1rem;
           height: 48px;

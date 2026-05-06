@@ -55,10 +55,14 @@ export default function Home() {
       {currentView === 'racers-edge-home'    && <RacersEdgeHome />}
       {currentView === 'racers-edge-catalog' && <RacersEdgePage />}
 
+      {/* ── Topbar: visible en home y garage ── */}
+      {(currentView === 'home' || currentView === 'garage') && <Topbar currentView={currentView} />}
+
+      {/* ── Navbar: visible en home y garage ── */}
+      {(currentView === 'home' || currentView === 'garage') && <Navbar isSticky={false} transparent={currentView === 'garage'} />}
+
       {/* ── Landing (visible solo en home) ── */}
       <div style={{ display: currentView === 'home' ? 'block' : 'none' }}>
-        <Topbar />
-        <Navbar />
         <main>
           <HeroSection />
           <LetterSection />

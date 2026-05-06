@@ -4,16 +4,22 @@ import { useAppStore } from '@/lib/cartStore'
 
 interface TopbarProps {
   isSticky?: boolean
+  currentView?: string
 }
 
-export default function Topbar({ isSticky = true }: TopbarProps) {
+export default function Topbar({ isSticky = true, currentView }: TopbarProps) {
   const { cartCount, setView } = useAppStore()
   const count = cartCount()
 
   return (
     <header
-      className={`${isSticky ? 'sticky top-0' : ''} z-[300] flex items-center justify-between px-10 border-b-2`}
-      style={{ background: 'var(--dark2)', borderColor: 'var(--dark3)', height: 78 }}
+      className={`${currentView === 'garage' ? 'fixed top-0 left-0 right-0' : isSticky ? 'sticky top-0' : ''} z-[350] flex items-center justify-between px-10 border-b-2`}
+      style={{
+        background: currentView === 'garage' ? 'rgba(8,10,12,0.65)' : 'var(--dark2)',
+        backdropFilter: currentView === 'garage' ? 'blur(12px)' : undefined,
+        borderColor: currentView === 'garage' ? 'rgba(255,255,255,0.06)' : 'var(--dark3)',
+        height: 78,
+      }}
     >
       {/* Logo */}
       <div
@@ -21,7 +27,9 @@ export default function Topbar({ isSticky = true }: TopbarProps) {
         style={{ fontSize: '2.7rem', letterSpacing: '0.02em' }}
         onClick={() => setView('home')}
       >
-        CLAVEL<span style={{ color: 'var(--yellow)' }}>PARTS</span>
+        {currentView === 'garage'
+          ? <>MI <span style={{ color: 'var(--yellow)' }}>GARAGE</span></>
+          : <>CLAVEL<span style={{ color: 'var(--yellow)' }}>PARTS</span></>}
       </div>
 
       {/* Right icons */}
@@ -29,13 +37,16 @@ export default function Topbar({ isSticky = true }: TopbarProps) {
         <button
           className="topbar-icon"
           style={{ color: 'var(--gray2)' }}
-          onClick={() => setView('garage')}
+          onClick={() => setView(currentView === 'garage' ? 'home' : 'garage')}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-[22px] h-[22px]">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
+            {currentView === 'garage' ? (
+              <><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>
+            ) : (
+              <><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>
+            )}
           </svg>
-          MI GARAGE
+          {currentView === 'garage' ? 'HOME' : 'MI GARAGE'}
         </button>
 
         <button

@@ -136,21 +136,21 @@ export default function VehicleSelector() {
   }
 
   const selectClass = `
-    w-full px-[1.1rem] py-[0.78rem] rounded-full
+    w-full px-[1.1rem] py-[0.62rem] rounded-full
     font-condensed font-bold text-[1rem] uppercase tracking-[0.05em]
-    cursor-pointer transition-shadow duration-200 border-none
-    text-[var(--text-dark)] bg-white select-arrow
+    cursor-pointer transition-shadow duration-200 border
+    border-[#FFD700] text-white bg-[#111111] select-arrow
     focus:outline-none focus:ring-2 focus:ring-[var(--yellow)]
     disabled:opacity-40 disabled:cursor-not-allowed
   `
 
   return (
     <div
-      className="flex flex-col justify-center gap-[0.85rem] px-[1.8rem] py-8 border-r-2 w-full"
-      style={{ background: 'var(--dark3)', borderColor: 'var(--dark4)', minHeight: 'calc(100vh - 126px)' }}
+      className="flex flex-col justify-center gap-[0.45rem] px-[1.25rem] py-4 border-r-2 w-full"
+      style={{ background: '#000000', borderColor: 'var(--dark4)', minHeight: 'calc(100vh - 126px)' }}
     >
       <p
-        className="text-center font-condensed font-black italic uppercase text-white mb-1"
+        className="text-center font-condensed font-black italic uppercase text-white mb-0"
         style={{ fontSize: '1.55rem', letterSpacing: '0.06em' }}
       >
         ¿QUÉ AUTO <span style={{ color: 'var(--yellow)' }}>TENÉS?</span>
@@ -256,9 +256,9 @@ export default function VehicleSelector() {
       {isComplete && (
         <button
           onClick={handleSearch}
-          className="w-full flex items-center justify-center gap-2 rounded-full font-condensed font-black italic uppercase transition-all duration-150 mt-1"
+          className="w-full flex items-center justify-center gap-2 rounded-full font-condensed font-black italic uppercase transition-all duration-150 mt-0"
           style={{
-            padding: '0.85rem 1.1rem',
+            padding: '0.72rem 1.1rem',
             background: 'var(--yellow)',
             color: 'var(--text-dark)',
             fontSize: '1.1rem',
@@ -276,9 +276,9 @@ export default function VehicleSelector() {
         </button>
       )}
 
-      <div className="flex items-center gap-2 my-1">
+      <div className="flex items-center gap-2 my-0">
         <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }} />
-        <span className="text-[0.72rem] uppercase tracking-[0.1em] whitespace-nowrap" style={{ color: 'var(--gray)' }}>
+        <span className="text-[0.72rem] uppercase tracking-[0.1em] whitespace-nowrap" style={{ color: '#999999' }}>
           O BUSCÁ POR NOMBRE O CÓDIGO
         </span>
         <div className="flex-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }} />
@@ -307,9 +307,9 @@ export default function VehicleSelector() {
       <button
         className="w-full flex items-center justify-center gap-2 rounded-full font-condensed font-black italic uppercase transition-all duration-200"
         style={{
-          padding: '0.85rem 1.1rem',
-          background: 'var(--slate)',
-          color: 'var(--white)',
+          padding: '0.72rem 1.1rem',
+          background: 'var(--yellow)',
+          color: '#111',
           fontSize: '1.1rem',
           letterSpacing: '0.08em',
           border: 'none',
@@ -324,11 +324,6 @@ export default function VehicleSelector() {
         BUSCAR REPUESTO
       </button>
 
-      <p className="text-center italic leading-[1.4]" style={{ fontSize: '0.75rem', color: 'var(--gray)' }}>
-        Solo te mostramos repuestos compatibles con tu vehículo exacto.
-        <br />
-        Cero margen de error.
-      </p>
     </div>
   )
 }
