@@ -23,11 +23,7 @@ interface CatalogRow {
   especificaciones?: Record<string, unknown> | null
   vendedor?: string | null
   vendedor_id?: number | null
-}
-
-interface ProductImageRow {
-  sku: string
-  imagen_url: string | null
+  imagen_url?: string | null
 }
 
 export interface CatalogProduct extends Omit<CartProduct, 'qty'> {
@@ -103,14 +99,18 @@ export async function getCatalogProducts(
 
     const rows = (data as CatalogRow[] | null) ?? []
 
-    // Collect product IDs (new system: fotos_producto) and SKUs (old system: productos.imagen_url)
-    const productIds = Array.from(new Set(rows.map((item) => item.product_id).filter((id): id is number => id != null)))
-    const skus = Array.from(new Set(rows.map((item) => item.sku).filter(Boolean)))
+    // Collect numeric product IDs for fotos_producto query (new photo system)
+    const productIds = Array.from(
+      new Set(
+        rows
+          .map((item) => (item.product_id != null ? Number(item.product_id) : null))
+          .filter((id): id is number => id != null && !isNaN(id))
+      )
+    )
 
     const imageByProductId = new Map<number, string>()
-    const imageBySku = new Map<string, string>()
 
-    // Fetch from fotos_producto (new system - takes priority)
+    // Fetch from fotos_producto (new system — vendor-uploaded photos)
     if (productIds.length > 0) {
       const { data: fotoRows, error: fotoError } = await supabase
         .from('fotos_producto')
@@ -118,28 +118,11 @@ export async function getCatalogProducts(
         .in('producto_id', productIds)
         .order('orden')
 
-      if (!fotoError) {
-        ;((fotoRows as { producto_id: number; url: string }[] | null) ?? []).forEach((row) => {
-          // Only keep the first (lowest orden) photo per product
-          if (row.producto_id && row.url && !imageByProductId.has(row.producto_id)) {
-            imageByProductId.set(row.producto_id, row.url)
-          }
-        })
-      }
-    }
-
-    // Fetch from productos.imagen_url (old system - fallback)
-    if (skus.length > 0) {
-      const { data: imageRows, error: imageError } = await supabase
-        .from('productos')
-        .select('sku, imagen_url')
-        .in('sku', skus)
-        .not('imagen_url', 'is', null)
-
-      if (!imageError) {
-        ;((imageRows as ProductImageRow[] | null) ?? []).forEach((row) => {
-          if (row.sku && row.imagen_url) {
-            imageBySku.set(row.sku, row.imagen_url)
+      if (!fotoError && fotoRows) {
+        ;(fotoRows as { producto_id: number; url: string }[]).forEach((row) => {
+          const pid = Number(row.producto_id)
+          if (!isNaN(pid) && row.url && !imageByProductId.has(pid)) {
+            imageByProductId.set(pid, row.url)
           }
         })
       }
@@ -155,7 +138,8 @@ export async function getCatalogProducts(
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
-      image: (item.product_id != null ? imageByProductId.get(item.product_id) : undefined) ?? imageBySku.get(item.sku) ?? undefined,
+      image: (item.product_id != null ? imageByProductId.get(Number(item.product_id)) : undefined)
+        ?? (item.imagen_url || undefined),
       group: item.grupo || 'General',
       subgroup: resolveSubgroup(item),
       version: item.version,
