@@ -18,7 +18,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="px-10 py-[4.5rem]" style={{ background: 'var(--dark2)' }}>
+    <section className="section-px px-10 py-[4.5rem]" style={{ background: 'var(--dark2)' }}>
       <div className="text-center mb-12">
         <span
           className="inline-block font-condensed font-bold uppercase mb-[0.9rem]"
@@ -44,7 +44,7 @@ export default function HowItWorks() {
         </p>
       </div>
 
-      <div className="grid gap-6 max-w-[1100px] mx-auto" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="grid gap-6 max-w-[1100px] mx-auto grid-3col" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
         {steps.map((step) => (
           <div
             key={step.num}

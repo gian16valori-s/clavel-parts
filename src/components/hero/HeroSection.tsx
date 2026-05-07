@@ -56,6 +56,7 @@ export default function HeroSection() {
 
   return (
     <section
+      className="hero-grid"
       style={{
         display: 'grid',
         overflow: 'hidden',
@@ -69,6 +70,7 @@ export default function HeroSection() {
 
       {/* RIGHT — Visual */}
       <div
+        className="hero-visual"
         style={{
           position: 'relative',
           minWidth: 0,
@@ -140,7 +142,7 @@ export default function HeroSection() {
             </span>
 
             <h1
-              className="font-condensed font-black italic uppercase text-white"
+              className="font-condensed font-black italic uppercase text-white hero-title"
               style={{
                 fontSize: '4.5rem',
                 lineHeight: 0.9,

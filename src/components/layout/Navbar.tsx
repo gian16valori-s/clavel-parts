@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useAppStore } from '@/lib/cartStore'
 
 const navLinks = [
@@ -17,9 +18,11 @@ interface NavbarProps {
 
 export default function Navbar({ isSticky = true, transparent = false }: NavbarProps) {
   const { setView } = useAppStore()
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <nav
-      className={`${isSticky ? 'sticky' : transparent ? 'fixed' : ''} z-[350] flex items-center px-10 border-b-2 overflow-x-auto`}
+      className={`${isSticky ? 'sticky' : transparent ? 'fixed' : ''} z-[350] flex items-center px-4 md:px-10 border-b-2 overflow-x-auto relative ${menuOpen ? 'navbar-mobile-open' : ''}`}
       style={{
         background: transparent ? 'rgba(0,0,0,0.55)' : '#000',
         backdropFilter: transparent ? 'blur(10px)' : undefined,
@@ -30,6 +33,32 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
         borderColor: transparent ? 'rgba(255,255,255,0.06)' : 'var(--dark)',
       }}
     >
+      {/* Hamburger button — only visible on mobile */}
+      <button
+        className="navbar-hamburger items-center justify-center mr-3"
+        style={{
+          display: 'none',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: '#fff',
+          padding: '4px',
+          flexShrink: 0,
+        }}
+        onClick={() => setMenuOpen((v) => !v)}
+        aria-label="Menú"
+      >
+        {menuOpen ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={22} height={22}>
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={22} height={22}>
+            <path d="M3 6h18M3 12h18M3 18h18"/>
+          </svg>
+        )}
+      </button>
+
       {/* Login */}
       <Link
         href="/login"
@@ -43,6 +72,7 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
           textTransform: 'uppercase',
           borderRight: '1px solid rgba(255,255,255,0.09)',
           textDecoration: 'none',
+          flexShrink: 0,
         }}
         onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#fff')}
@@ -51,11 +81,11 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
-        INICIAR SESIÓN
+        <span className="hidden md:inline">INICIAR SESIÓN</span>
       </Link>
 
-      {/* Category links */}
-      <div className="flex items-center flex-1">
+      {/* Category links — hidden on mobile, shown via hamburger */}
+      <div className="navbar-links flex items-center flex-1">
         {navLinks.map((link) => (
           <a key={link} href="#" className="nav-link">
             {link}

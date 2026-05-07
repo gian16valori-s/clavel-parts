@@ -146,7 +146,7 @@ export default function VehicleSelector() {
 
   return (
     <div
-      className="flex flex-col justify-center gap-[0.45rem] px-[1.25rem] py-4 border-r-2 w-full"
+      className="hero-selector flex flex-col justify-center gap-[0.45rem] px-[1.25rem] py-4 border-r-2 w-full"
       style={{ background: '#000000', borderColor: 'var(--dark4)', minHeight: 'calc(100vh - 126px)' }}
     >
       <p
