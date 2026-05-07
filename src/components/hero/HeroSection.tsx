@@ -55,31 +55,12 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section
-      className="hero-grid"
-      style={{
-        display: 'grid',
-        overflow: 'hidden',
-        gridTemplateColumns: 'clamp(250px, 30%, 400px) minmax(0, 1fr)',
-        minHeight: 'calc(100vh - 126px)',
-        height: 'calc(100vh - 126px)',
-      }}
-    >
+    <section className="hero-grid">
       {/* LEFT — Vehicle selector */}
       <VehicleSelector />
 
       {/* RIGHT — Visual */}
-      <div
-        className="hero-visual"
-        style={{
-          position: 'relative',
-          minWidth: 0,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-        }}
-      >
+      <div className="hero-visual">
         <div
           className="absolute inset-0"
           style={{ background: 'linear-gradient(135deg, #0c0e10 0%, #141a22 55%, #0f1419 100%)' }}
