@@ -73,7 +73,7 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
             className="nav-link nav-link-hl"
             onClick={(e) => { e.preventDefault(); setView('racers-edge-home') }}
           >
-            THE RACER'S EDGE
+            THE RACER&apos;S EDGE
           </a>
         </div>
       </div>

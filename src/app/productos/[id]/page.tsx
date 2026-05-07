@@ -37,6 +37,7 @@ export default function DetalleProductoPage() {
   if (!producto) return <div style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>Producto no encontrado</div>
 
   function handleAddToCart() {
+    if (!producto) return
     addToCart({
       id: producto.id,
       name: producto.name,

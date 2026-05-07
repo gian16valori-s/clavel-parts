@@ -86,7 +86,7 @@ export default function RacersEdgeHome() {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 390, background: '#111', overflowY: 'auto', color: '#fff', fontFamily: '"Barlow Condensed", sans-serif' }}>
       <div style={{ minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', letterSpacing: '0.03em', fontWeight: 700, background: 'linear-gradient(180deg, #2c2c2c, #1a1a1a)', borderBottom: '1px solid #3b3b3b', textTransform: 'uppercase', padding: '4px 8px', textAlign: 'center' }}>
-        THE RACER'S EDGE | PERFORMANCE PARTS PARA CALLE Y PISTA
+        THE RACER&apos;S EDGE | PERFORMANCE PARTS PARA CALLE Y PISTA
       </div>
 
       <header style={{ background: '#050505', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, padding: '14px 24px', borderBottom: '1px solid #1b1b1b' }}>
@@ -162,7 +162,6 @@ export default function RacersEdgeHome() {
                   <button
                     key={brand.id}
                     type="button"
-                    onMouseEnter={() => setSelectedVehicleBrand(brand)}
                     onFocus={() => setSelectedVehicleBrand(brand)}
                     style={{
                       width: '100%', border: 'none', borderBottom: '1px solid #1e1e1e',
@@ -173,7 +172,7 @@ export default function RacersEdgeHome() {
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}
                     onMouseEnter={(e) => {
-                      setSelectedVehicleBrand(brand)
+                      setSelectedVehicleBrand(brand);
                       (e.currentTarget as HTMLButtonElement).style.background = '#1e1e1e'
                       ;(e.currentTarget as HTMLButtonElement).style.color = '#fff'
                     }}
