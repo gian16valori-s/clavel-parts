@@ -15,7 +15,7 @@ export default function GaragePage() {
       style={{ background: '#080a0c' }}
     >
       {/* ── Main layout ── */}
-      <div className="flex flex-1 overflow-hidden" style={{ paddingTop: 126 }}>
+      <div className="garage-layout flex flex-1 overflow-hidden" style={{ paddingTop: 126 }}>
         {/* LEFT — Car showcase */}
         <CarShowcase car={activeCar} />
       </div>

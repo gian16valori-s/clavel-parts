@@ -15,7 +15,7 @@ export default function CartPage() {
     >
       {/* Topbar */}
       <div
-        className="sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
+        className="cart-topbar sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
         style={{ background: 'var(--dark2)', height: 64, borderColor: 'var(--dark3)' }}
       >
         <button
@@ -55,7 +55,7 @@ export default function CartPage() {
 
       {/* Content */}
       <div
-        className="max-w-[1200px] mx-auto py-8 px-8 grid items-start gap-8"
+        className="cart-grid max-w-[1200px] mx-auto py-8 px-8 grid items-start gap-8"
         style={{ gridTemplateColumns: '1fr 380px' }}
       >
         {/* Items */}

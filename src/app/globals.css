@@ -164,6 +164,42 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.05) !important;
     width: 100% !important;
   }
+
+  /* ResultsGrid: barra superior */
+  .results-topbar {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+  .results-vehicle-label {
+    font-size: 0.72rem !important;
+    max-width: 140px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .results-catalog-label { display: none !important; }
+
+  /* ResultsGrid: layout */
+  .results-layout { flex-direction: column !important; }
+
+  /* FiltersPanel: colapsado en mobile */
+  .filters-panel-desktop { display: none !important; }
+  .filters-panel-mobile-bar { display: flex !important; }
+
+  /* CartPage: columna única */
+  .cart-grid {
+    grid-template-columns: 1fr !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .cart-topbar {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* GaragePage */
+  .garage-layout { padding-top: 78px !important; }
 }
 
 /* ── Hero background grid ── */

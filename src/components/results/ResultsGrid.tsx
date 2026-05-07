@@ -433,7 +433,7 @@ export default function ResultsGrid() {
       <Navbar isSticky={false} />
 
       <div
-        className="sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
+        className="results-topbar sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
         style={{ background: 'var(--dark2)', height: 64, borderColor: 'var(--dark3)' }}
       >
         <button
@@ -451,7 +451,7 @@ export default function ResultsGrid() {
         </button>
 
         <div
-          className="flex items-center gap-2 px-4 py-[0.4rem] rounded-[20px] font-condensed font-bold uppercase tracking-[0.05em]"
+          className="results-vehicle-label flex items-center gap-2 px-4 py-[0.4rem] rounded-[20px] font-condensed font-bold uppercase tracking-[0.05em]"
           style={{
             background: 'var(--dark3)',
             border: '1px solid var(--dark4)',
@@ -463,15 +463,16 @@ export default function ResultsGrid() {
         </div>
 
         <div
-          className="font-condensed font-bold uppercase tracking-[0.06em]"
+          className="results-catalog-label font-condensed font-bold uppercase tracking-[0.06em]"
           style={{ fontSize: '0.9rem', color: 'var(--gray)' }}
         >
           CATÁLOGO COMPATIBLE
         </div>
       </div>
 
-      <div className="flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <div className="results-layout flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
         {selectedGroup !== 'TODOS' && (
+          <div className="filters-panel-desktop">
           <FiltersPanel
             groups={groups}
             subgroups={subgroups}
@@ -480,6 +481,7 @@ export default function ResultsGrid() {
             onSelectGroup={setSelectedGroup}
             onSelectSubgroup={setSelectedSubgroup}
           />
+          </div>
         )}
 
         <main className="flex-1 p-8" style={{ background: 'var(--light-bg)' }}>
