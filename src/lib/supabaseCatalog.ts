@@ -102,9 +102,33 @@ export async function getCatalogProducts(
     if (error) throw error
 
     const rows = (data as CatalogRow[] | null) ?? []
+
+    // Collect product IDs (new system: fotos_producto) and SKUs (old system: productos.imagen_url)
+    const productIds = Array.from(new Set(rows.map((item) => item.product_id).filter((id): id is number => id != null)))
     const skus = Array.from(new Set(rows.map((item) => item.sku).filter(Boolean)))
+
+    const imageByProductId = new Map<number, string>()
     const imageBySku = new Map<string, string>()
 
+    // Fetch from fotos_producto (new system - takes priority)
+    if (productIds.length > 0) {
+      const { data: fotoRows, error: fotoError } = await supabase
+        .from('fotos_producto')
+        .select('producto_id, url')
+        .in('producto_id', productIds)
+        .order('orden')
+
+      if (!fotoError) {
+        ;((fotoRows as { producto_id: number; url: string }[] | null) ?? []).forEach((row) => {
+          // Only keep the first (lowest orden) photo per product
+          if (row.producto_id && row.url && !imageByProductId.has(row.producto_id)) {
+            imageByProductId.set(row.producto_id, row.url)
+          }
+        })
+      }
+    }
+
+    // Fetch from productos.imagen_url (old system - fallback)
     if (skus.length > 0) {
       const { data: imageRows, error: imageError } = await supabase
         .from('productos')
@@ -131,7 +155,7 @@ export async function getCatalogProducts(
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
-      image: imageBySku.get(item.sku) || undefined,
+      image: (item.product_id != null ? imageByProductId.get(item.product_id) : undefined) ?? imageBySku.get(item.sku) ?? undefined,
       group: item.grupo || 'General',
       subgroup: resolveSubgroup(item),
       version: item.version,
