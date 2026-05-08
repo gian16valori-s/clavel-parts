@@ -40,7 +40,7 @@ export default function GaragePage() {
                 cursor: 'pointer',
               }}
             >
-              {car.model} · {car.year}
+              {car.brand} {car.model} · {car.year}
             </button>
           ))}
           <button
