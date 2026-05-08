@@ -30,8 +30,6 @@ export type ProductDetail = {
 
 type ProductRow = {
   id: number
-  grupo_id?: number | null
-  subgrupo_id?: number | null
   sku?: string | null
   producto?: string | null
   descripcion_corta?: string | null
@@ -50,10 +48,13 @@ type ProductRow = {
   largo_cm?: number | null
   vendedor?: string | null
   imagen_url?: string | null
-}
-
-type NameRow = {
-  nombre?: string | null
+  grupo?: string | null
+  subgrupo?: string | null
+  marca?: string | null
+  modelo?: string | null
+  anio?: number | null
+  version?: string | null
+  motor_codigo?: string | null
 }
 
 type CatalogCompatibilityRow = {
@@ -111,31 +112,17 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
   const numericId = Number(id)
 
   const { data, error } = await supabase
-    .from('productos')
+    .from('vista_catalogo')
     .select('*')
-    .eq('id', numericId)
-    .maybeSingle()
+    .eq('product_id', numericId)
 
-  if (error || !data) {
+  const rows = (data as ProductRow[] | null) ?? []
+
+  if (error || rows.length === 0) {
     return fallbackProduct(id)
   }
 
-  const product = data as ProductRow
-
-  const [groupResult, subgroupResult, compatibilityResult] = await Promise.all([
-    product.grupo_id
-      ? supabase.from('grupos').select('nombre').eq('id', product.grupo_id).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    product.subgrupo_id
-      ? supabase.from('subgrupos').select('nombre').eq('id', product.subgrupo_id).maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    product.sku
-      ? supabase
-          .from('vista_catalogo')
-          .select('marca, modelo, anio, version, motor_codigo')
-          .eq('sku', product.sku)
-      : Promise.resolve({ data: [], error: null }),
-  ])
+  const product = rows[0]
 
   let imageUrls: string[] = []
   try {
@@ -149,8 +136,8 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
     imageUrls = [product.imagen_url]
   }
 
-  const groupName = (groupResult.data as NameRow | null)?.nombre || 'General'
-  const subgroupName = (subgroupResult.data as NameRow | null)?.nombre || 'General'
+  const groupName = product.grupo || 'General'
+  const subgroupName = product.subgrupo || 'General'
   const attributes = [
     buildAttribute('Marca', product.marca_pieza),
     buildAttribute('OEM', product.numero_parte_oem),
@@ -163,7 +150,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
     ...specAttributes(product.especificaciones),
   ].filter((item): item is ProductDetailAttribute => Boolean(item))
 
-  const compatibilityRows = ((compatibilityResult.data as CatalogCompatibilityRow[] | null) ?? [])
+  const compatibilityRows = (rows as CatalogCompatibilityRow[])
     .map((item) => {
       const vehicle = [item.marca, item.modelo, item.anio].filter(Boolean).join(' ')
       const version = [item.version, item.motor_codigo].filter(Boolean).join(' · ')
