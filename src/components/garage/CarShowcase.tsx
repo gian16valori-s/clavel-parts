@@ -57,7 +57,7 @@ const menuItems = [
   },
   {
     title: 'ALERTAS',
-    subtitle: '2 novedades para tu BMW',
+    subtitle: '2 novedades para tu vehículo',
     badge: 2,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} width={18} height={18}>
@@ -103,7 +103,7 @@ export default function CarShowcase({ car = defaultCar }: { car?: GarageCar }) {
         <div className="absolute inset-0 flex items-end justify-center" style={{ paddingBottom: '6%', zIndex: 5 }}>
           <img
             src={carImage}
-            alt={`${car.brand} ${car.model}`}
+            alt={car.model}
             className="object-contain drop-shadow-2xl"
             style={{
               maxHeight: '70%',
@@ -137,7 +137,7 @@ export default function CarShowcase({ car = defaultCar }: { car?: GarageCar }) {
             className="font-black uppercase"
             style={{ color: '#ffffff', fontSize: '1.55rem', letterSpacing: '0.05em', lineHeight: 1.1, fontFamily: '"Barlow Condensed", sans-serif' }}
           >
-            {car.brand} <span style={{ color: '#e8e8e8' }}>{car.model}</span>
+            <span style={{ color: '#e8e8e8' }}>{car.model}</span>
           </div>
           <div style={{ color: '#999', fontSize: '0.78rem', marginTop: '3px', letterSpacing: '0.02em' }}>
             {car.version} · {car.year} · {car.km.toLocaleString('es-AR')} km
