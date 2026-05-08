@@ -173,10 +173,19 @@ function ProductCard({ product }: { product: REProduct }) {
 }
 
 export default function RacersEdgePage() {
+  const router = useRouter()
   const { setView, vehicle } = useAppStore()
   const [activeCategory, setActiveCategory] = useState<RECategory | 'todos'>('todos')
   const [catalogProducts, setCatalogProducts] = useState<REProduct[]>(reProducts)
   const [catalogLoading, setCatalogLoading] = useState(false)
+
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    setView('racers-edge-home')
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -262,7 +271,7 @@ export default function RacersEdgePage() {
 
         {/* VOLVER */}
         <button
-          onClick={() => setView('racers-edge-home')}
+          onClick={handleBack}
           style={{
             fontFamily: '"Barlow Condensed", sans-serif',
             fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em',

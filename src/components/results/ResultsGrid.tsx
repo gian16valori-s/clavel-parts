@@ -423,6 +423,14 @@ export default function ResultsGrid() {
       ? `Búsqueda general · ${searchQuery}`
       : 'Tu vehículo'
 
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    setView('home')
+  }
+
   return (
     <div
       id="results-page"
@@ -439,7 +447,7 @@ export default function ResultsGrid() {
         <button
           className="flex items-center gap-2 font-condensed font-bold uppercase tracking-[0.06em] transition-colors duration-200"
           style={{ background: 'none', border: 'none', color: 'var(--gray2)', fontSize: '0.95rem', cursor: 'pointer' }}
-          onClick={() => setView('home')}
+          onClick={handleBack}
           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray2)')}
         >

@@ -63,7 +63,7 @@ export default function SolicitudVendedorForm() {
 
   if (enviado)
     return (
-      <div style={{ padding: 24, background: "#f0fdf4", borderRadius: 8 }}>
+      <div style={{ padding: 24, background: '#f0fdf4', color: '#14532d', border: '1px solid #86efac', borderRadius: 8, fontWeight: 600 }}>
         ¡Solicitud enviada! Te contactaremos pronto.
       </div>
     );

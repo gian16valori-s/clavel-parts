@@ -1,12 +1,22 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/cartStore'
 import CartItemRow from './CartItem'
 import OrderSummary from './OrderSummary'
 
 export default function CartPage() {
+  const router = useRouter()
   const { cart, cartCount, setView } = useAppStore()
   const count = cartCount()
+
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    setView('results')
+  }
 
   return (
     <div
@@ -21,7 +31,7 @@ export default function CartPage() {
         <button
           className="flex items-center gap-2 font-condensed font-bold uppercase tracking-[0.06em] transition-colors duration-200"
           style={{ background: 'none', border: 'none', color: 'var(--gray2)', fontSize: '0.95rem', cursor: 'pointer' }}
-          onClick={() => setView('results')}
+          onClick={handleBack}
           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray2)')}
         >

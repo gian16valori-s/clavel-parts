@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSession, loginVendedor } from '@/lib/vendedorAuth'
+import AuthTopbar from '@/components/layout/AuthTopbar'
 
 export default function LoginVendedorPage() {
   const router = useRouter()
@@ -45,7 +46,10 @@ export default function LoginVendedorPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'linear-gradient(135deg, #141618 0%, #1c1f23 100%)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #141618 0%, #1c1f23 100%)' }}>
+      <AuthTopbar backFallback="/login" />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-xl p-6 border"
@@ -128,6 +132,7 @@ export default function LoginVendedorPage() {
           Volver al ingreso principal
         </a>
       </form>
-    </main>
+      </main>
+    </div>
   )
 }

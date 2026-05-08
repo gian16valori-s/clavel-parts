@@ -77,6 +77,14 @@ export default function PanelProductosPage() {
   const [editLoading, setEditLoading] = useState(false)
   const [savingEdit, setSavingEdit] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState(false)
+
+  function handleBackToPanel() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push('/panel')
+  }
   const [editError, setEditError] = useState('')
   const [editSuccess, setEditSuccess] = useState('')
 
@@ -395,7 +403,7 @@ export default function PanelProductosPage() {
           <p className="mt-3 text-sm" style={{ color: 'var(--gray)' }}>Usuario: {userEmail || 'sin email'}</p>
           <button
             type="button"
-            onClick={() => router.push('/panel')}
+            onClick={handleBackToPanel}
             className="mt-5 rounded-md px-4 py-2 font-condensed font-bold uppercase"
             style={{ background: 'var(--slate)', color: 'var(--white)' }}
           >
@@ -422,7 +430,7 @@ export default function PanelProductosPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => router.push('/panel')}
+              onClick={handleBackToPanel}
               className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
               style={{ background: 'var(--slate)', color: 'var(--white)' }}
             >

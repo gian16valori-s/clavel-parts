@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import AuthTopbar from '@/components/layout/AuthTopbar'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -38,7 +39,10 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: 'linear-gradient(135deg, #141618 0%, #1c1f23 100%)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #141618 0%, #1c1f23 100%)' }}>
+      <AuthTopbar backFallback="/" />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-xl p-6 border" style={{ background: 'var(--dark2)', borderColor: 'var(--dark4)' }}>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
@@ -133,6 +137,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </div>
   )
 }
