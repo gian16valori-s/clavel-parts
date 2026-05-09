@@ -3,9 +3,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSession, getVendedorActual, logoutVendedor, type Vendedor } from '@/lib/vendedorAuth';
+import { getVendedorActual, logoutVendedor, type Vendedor } from '@/lib/vendedorAuth';
 import { getProductosVendedorActual, type ProductoVendedorResumen } from '@/lib/vendedorProducts';
-import ProductForm from '@/components/vendedor/ProductForm';
+import { supabase } from '@/lib/supabaseClient';
 
 // Quitar lógica y estado del formulario anterior
 
@@ -19,42 +19,65 @@ export default function PanelVendedorPage() {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    const loadPanel = async () => {
+    let cancelled = false
+
+    const loadPanelData = async (email: string | null) => {
       try {
-        setLoading(true)
-        setError('')
-
-        const session = await getSession()
-        if (!session?.user) {
-          router.replace('/login/vendedor')
-          return
-        }
-
-        setUserEmail(session.user.email ?? '')
-
+        setUserEmail(email ?? '')
         const vendedorActual = await getVendedorActual()
+        if (cancelled) return
         setVendedor(vendedorActual)
 
         if (vendedorActual) {
           const productsResult = await getProductosVendedorActual()
-          if (productsResult.error) {
-            setError(productsResult.error)
-          }
+          if (cancelled) return
+          if (productsResult.error) setError(productsResult.error)
           setProductos(productsResult.data)
         }
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'No se pudo cargar el panel.')
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'No se pudo cargar el panel.')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    void loadPanel()
+    // 1) Chequeo inicial: si hay sesión persistida, cargo data; si no, espero
+    //    a que onAuthStateChange confirme (evita la race condition con redirect)
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      if (data.session?.user) {
+        void loadPanelData(data.session.user.email ?? null)
+      }
+    })
+
+    // 2) Suscripción: si en cualquier momento la sesión queda en null, mando a /login
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return
+      if (!session?.user) {
+        router.replace('/login')
+      } else {
+        void loadPanelData(session.user.email ?? null)
+      }
+    })
+
+    // 3) Si después de un toque sigue sin sesión, redirijo
+    const fallback = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (cancelled) return
+        if (!data.session?.user) router.replace('/login')
+      })
+    }, 600)
+
+    return () => {
+      cancelled = true
+      clearTimeout(fallback)
+      sub.subscription.unsubscribe()
+    }
   }, [router])
 
   async function handleLogout() {
     await logoutVendedor()
-    router.replace('/login/vendedor')
+    router.replace('/')
   }
 
 
@@ -87,13 +110,22 @@ export default function PanelVendedorPage() {
           <p className="mb-6 text-sm" style={{ color: 'var(--gray)' }}>
             Usuario actual: {userEmail || 'sin email'}
           </p>
-          <button
-            onClick={handleLogout}
-            className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
-            style={{ background: 'var(--slate)', color: 'var(--white)' }}
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+            >
+              ← Volver al home
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--slate)', color: 'var(--white)' }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </main>
     )
@@ -102,6 +134,30 @@ export default function PanelVendedorPage() {
   return (
     <main className="min-h-screen px-4 py-8" style={{ background: 'var(--dark)' }}>
       <div className="max-w-6xl mx-auto">
+
+        {/* Volver al home */}
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="mb-5 inline-flex items-center gap-2 rounded-md px-3 py-2 font-condensed font-bold uppercase text-sm transition-colors"
+          style={{
+            background: 'transparent',
+            color: 'var(--gray2)',
+            border: '1px solid var(--dark4)',
+            letterSpacing: '0.06em',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--white)'
+            e.currentTarget.style.borderColor = 'var(--gray)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--gray2)'
+            e.currentTarget.style.borderColor = 'var(--dark4)'
+          }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>&larr;</span>
+          Volver al home
+        </button>
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>

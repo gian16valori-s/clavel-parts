@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useAppStore } from '@/lib/cartStore'
 
 const navLinks = [
@@ -17,30 +16,6 @@ export default function Navbar() {
       className="sticky z-[299] flex items-center px-10 border-b-2"
       style={{ background: 'var(--slate)', top: 78, height: 48, borderColor: 'var(--dark)' }}
     >
-      {/* Login */}
-      <Link
-        href="/login"
-        className="flex items-center gap-[0.4rem] pr-5 mr-2 transition-colors duration-200"
-        style={{
-          fontFamily: '"Barlow Condensed", sans-serif',
-          fontWeight: 700,
-          fontSize: '0.9rem',
-          letterSpacing: '0.08em',
-          color: 'var(--gray2)',
-          textTransform: 'uppercase',
-          borderRight: '1px solid rgba(255,255,255,0.09)',
-          textDecoration: 'none',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray2)')}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-[18px] h-[18px]">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        INICIAR SESIÓN
-      </Link>
-
       {/* Category links */}
       <div className="flex items-center flex-1">
         {navLinks.map((link) => (
