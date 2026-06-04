@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer
-      className="flex items-center justify-between px-10 py-7 border-t"
+      className="footer-flex flex items-center justify-between px-10 py-7 border-t"
       style={{ background: '#0a0b0d', borderColor: 'var(--dark3)' }}
     >
       <div

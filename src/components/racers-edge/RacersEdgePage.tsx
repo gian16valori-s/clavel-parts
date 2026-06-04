@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/cartStore'
+import { getTREProducts } from '@/lib/supabaseTRE'
+import { mapCatalogProductToTREProduct } from '@/lib/treCatalogMapping'
 import {
   reProducts, RE_CATEGORIES, CATEGORY_COLOR,
   type REProduct, type RECategory,
@@ -15,6 +18,7 @@ const TAG_STYLE: Record<string, React.CSSProperties> = {
 }
 
 function ProductCard({ product }: { product: REProduct }) {
+  const router = useRouter()
   const catColor = CATEGORY_COLOR[product.category]
 
   return (
@@ -28,8 +32,9 @@ function ProductCard({ product }: { product: REProduct }) {
         display: 'flex',
         flexDirection: 'column',
         transition: 'border-color 0.2s, transform 0.15s',
-        cursor: 'default',
+        cursor: 'pointer',
       }}
+      onClick={() => router.push(`/productos/${product.id}`)}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = `${catColor}55`
         e.currentTarget.style.transform = 'translateY(-2px)'
@@ -139,6 +144,7 @@ function ProductCard({ product }: { product: REProduct }) {
             )}
           </div>
           <button
+            type="button"
             style={{
               background: '#cc1111',
               border: 'none',
@@ -154,6 +160,7 @@ function ProductCard({ product }: { product: REProduct }) {
               whiteSpace: 'nowrap',
               transition: 'background 0.15s',
             }}
+            onClick={() => router.push(`/productos/${product.id}`)}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#aa0d0d')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#cc1111')}
           >
@@ -166,12 +173,72 @@ function ProductCard({ product }: { product: REProduct }) {
 }
 
 export default function RacersEdgePage() {
+  const router = useRouter()
   const { setView, vehicle } = useAppStore()
   const [activeCategory, setActiveCategory] = useState<RECategory | 'todos'>('todos')
+  const [catalogProducts, setCatalogProducts] = useState<REProduct[]>(reProducts)
+  const [catalogLoading, setCatalogLoading] = useState(false)
 
-  const filtered = activeCategory === 'todos'
-    ? reProducts
-    : reProducts.filter((p) => p.category === activeCategory)
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    setView('racers-edge-home')
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadProducts = async () => {
+      setCatalogLoading(true)
+
+      // Map activeCategory to Supabase grupo name
+      const grupoMap: Record<string, string> = {
+        motor: 'Motor',
+        turbo: 'Turbo',
+        frenos: 'Frenos',
+        suspension: 'Suspensión',
+        escape: 'Escape',
+        llantas: 'Llantas',
+        body: 'Body',
+        interior: 'Interior',
+        electronica: 'Electrónica',
+      }
+
+      const products = await getTREProducts(
+        vehicle
+          ? {
+              marca: vehicle.brand,
+              modelo: vehicle.model,
+              grupo: activeCategory !== 'todos' ? grupoMap[activeCategory] : undefined,
+            }
+          : undefined
+      )
+
+      if (cancelled) return
+
+      setCatalogProducts(products.length > 0 ? products.map(mapCatalogProductToTREProduct) : reProducts)
+      setCatalogLoading(false)
+    }
+
+    void loadProducts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [vehicle, activeCategory])
+
+  const filtered = useMemo(
+    () => (activeCategory === 'todos'
+      ? catalogProducts
+      : catalogProducts.filter((p) => p.category === activeCategory)),
+    [activeCategory, catalogProducts]
+  )
+
+  const vehicleLabel = vehicle
+    ? [vehicle.brand, vehicle.model, vehicle.year !== 'TRE' ? vehicle.year : ''].filter(Boolean).join(' · ')
+    : ''
 
   return (
     <div style={{
@@ -204,7 +271,7 @@ export default function RacersEdgePage() {
 
         {/* VOLVER */}
         <button
-          onClick={() => setView('home')}
+          onClick={handleBack}
           style={{
             fontFamily: '"Barlow Condensed", sans-serif',
             fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.1em',
@@ -276,7 +343,7 @@ export default function RacersEdgePage() {
           >
             <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em', marginBottom: 1 }}>FILTRANDO PARA</div>
             <div style={{ fontWeight: 800, color: '#fff' }}>
-              {vehicle.brand} {vehicle.model} · {vehicle.year}
+              {vehicleLabel}
             </div>
           </div>
         ) : (
@@ -359,6 +426,18 @@ export default function RacersEdgePage() {
           PRODUCT GRID
       ═══════════════════════════════════════════ */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem 2rem' }}>
+        {catalogLoading && (
+          <div style={{
+            marginBottom: '1rem',
+            fontFamily: '"Barlow Condensed", sans-serif',
+            fontSize: '0.9rem',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.45)',
+          }}>
+            Cargando catálogo TRE...
+          </div>
+        )}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',

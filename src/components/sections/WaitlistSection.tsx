@@ -16,7 +16,7 @@ export default function WaitlistSection() {
   return (
     <section
       id="waitlist"
-      className="relative overflow-hidden text-center px-10 py-[4.5rem]"
+      className="relative overflow-hidden text-center section-px px-10 py-[4.5rem]"
       style={{ background: 'var(--slate)' }}
     >
       {/* Decorative circles */}
@@ -51,7 +51,7 @@ export default function WaitlistSection() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="flex gap-3 max-w-[540px] mx-auto"
+            className="waitlist-form flex gap-3 max-w-[540px] mx-auto"
           >
             <select
               value={role}

@@ -5,10 +5,42 @@ import { useEffect, useState } from 'react'
 import VehicleSelector from './VehicleSelector'
 
 const heroSlides = [
-  { id: 'slide-1', image: '/hero/slide-1.png' },
-  { id: 'slide-2', image: '/hero/slide-2.png' },
-  { id: 'slide-3', image: '/hero/slide-3.png' },
-  { id: 'slide-4', image: '/hero/slide-4.png' },
+  {
+    id: 'slide-1',
+    image: '/hero/slide-1.png',
+    badge: '🔧 MARKETPLACE DE AUTOPARTES · ARGENTINA',
+    title: <>EL REPUESTO<br /><span style={{ color: 'var(--yellow)' }}>CORRECTO,</span><br />GARANTIZADO.</>,
+    subtitle: 'Todos los repuestos disponibles en un solo lugar. Encontrá lo que necesitás en minutos, con compatibilidad verificada para tu vehículo exacto.',
+  },
+  {
+    id: 'slide-2',
+    image: '/hero/slide-2.png',
+    badge: '🚗 COMPATIBILIDAD VERIFICADA · MODELO A MODELO',
+    title: <><span style={{ color: 'var(--yellow)' }}>BUSCÁS</span><br />TU AUTO,<br />NOSOTROS EL REPUESTO.</>,
+    subtitle: 'Ingresá marca, modelo y año y el catálogo se filtra automáticamente con todas las piezas compatibles.',
+  },
+  {
+    id: 'slide-3',
+    image: '/hero/slide-3.png',
+    badge: '📦 VENDEDORES VERIFICADOS · TODO ARGENTINA',
+    title: <>COMPRÁ CON<br /><span style={{ color: 'var(--yellow)' }}>CONFIANZA</span><br />Y SIN VUELTAS.</>,
+    subtitle: 'Repuestos de vendedores calificados, con precios claros, stock real y entrega en todo el país.',
+  },
+  {
+    id: 'slide-4',
+    image: '/hero/slide-4.png',
+    badge: '⚡ PERFORMANCE · ACCESORIOS · ORIGINALES',
+    title: <>TODO LO QUE<br />TU AUTO<br /><span style={{ color: 'var(--yellow)' }}>NECESITA.</span></>,
+    subtitle: 'Desde repuestos originales hasta piezas de performance. Un solo marketplace, todo el catálogo.',
+  },
+  {
+    id: 'slide-5',
+    image: '/hero/slide-5.png',
+    badge: '🛠️ TUTORIALES · RESTAURACIÓN · CLÁSICOS',
+    title: <>EL MEJOR<br /><span style={{ color: 'var(--yellow)' }}>COMPAÑERO</span><br />PARA TU CLÁSICO.</>,
+    subtitle: 'Mirá nuestros tutoriales y guías para ayudarte a mejorar y restaurar tu auto clásico paso a paso.',
+    cta: { label: 'VER TUTORIALES', href: '#tutoriales' },
+  },
 ] as const
 
 export default function HeroSection() {
@@ -23,29 +55,12 @@ export default function HeroSection() {
   }, [])
 
   return (
-    <section
-      style={{
-        display: 'grid',
-        overflow: 'hidden',
-        gridTemplateColumns: '400px minmax(0, 1fr)',
-        minHeight: 'calc(100vh - 126px)',
-        height: 'calc(100vh - 126px)',
-      }}
-    >
+    <section className="hero-grid">
       {/* LEFT — Vehicle selector */}
       <VehicleSelector />
 
       {/* RIGHT — Visual */}
-      <div
-        style={{
-          position: 'relative',
-          minWidth: 0,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-        }}
-      >
+      <div className="hero-visual">
         <div
           className="absolute inset-0"
           style={{ background: 'linear-gradient(135deg, #0c0e10 0%, #141a22 55%, #0f1419 100%)' }}
@@ -89,43 +104,75 @@ export default function HeroSection() {
             background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.25) 65%, transparent 100%)',
           }}
         >
-          <span
-            className="inline-block font-condensed font-bold uppercase mb-[1.1rem]"
-            style={{
-              background: 'var(--slate)',
-              color: 'var(--gray2)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.15em',
-              padding: '0.28rem 0.9rem',
-              borderRadius: 3,
-            }}
+          <div
+            key={heroSlides[activeSlide].id + '-text'}
+            style={{ transition: 'opacity 600ms ease', opacity: 1 }}
           >
-            🔧 MARKETPLACE DE AUTOPARTES · ARGENTINA
-          </span>
+            <span
+              className="inline-block font-condensed font-bold uppercase mb-[1.1rem]"
+              style={{
+                background: 'var(--slate)',
+                color: 'var(--gray2)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.15em',
+                padding: '0.28rem 0.9rem',
+                borderRadius: 3,
+              }}
+            >
+              {heroSlides[activeSlide].badge}
+            </span>
 
-          <h1
-            className="font-condensed font-black italic uppercase text-white"
-            style={{
-              fontSize: '4.5rem',
-              lineHeight: 0.9,
-              textShadow: '0 2px 24px rgba(0,0,0,0.7)',
-              marginBottom: '1rem',
-            }}
-          >
-            EL REPUESTO<br />
-            <span style={{ color: 'var(--yellow)' }}>CORRECTO,</span><br />
-            GARANTIZADO.
-          </h1>
+            <h1
+              className="font-condensed font-black italic uppercase text-white hero-title"
+              style={{
+                fontSize: '4.5rem',
+                lineHeight: 0.9,
+                textShadow: '0 2px 24px rgba(0,0,0,0.7)',
+                marginBottom: '1rem',
+              }}
+            >
+              {heroSlides[activeSlide].title}
+            </h1>
 
-          <p
-            className="mb-[1.8rem] leading-[1.6]"
-            style={{ fontSize: '1rem', color: 'var(--gray)', maxWidth: 460 }}
-          >
-            Todos los repuestos disponibles en un solo lugar. Encontrá lo que necesitás en minutos, con compatibilidad verificada para tu vehículo exacto.
-          </p>
+            <p
+              className="mb-[1.8rem] leading-[1.6]"
+              style={{ fontSize: '1rem', color: 'var(--gray)', maxWidth: 460 }}
+            >
+              {heroSlides[activeSlide].subtitle}
+            </p>
+          </div>
 
-          <a
-            href="#waitlist"
+          {'cta' in heroSlides[activeSlide] ? (
+            <a
+              href={(heroSlides[activeSlide] as { cta: { label: string; href: string } }).cta.href}
+              className="inline-flex items-center gap-[0.55rem] font-condensed font-black italic uppercase no-underline transition-all duration-150"
+              style={{
+                background: 'var(--yellow)',
+                color: 'var(--text-dark)',
+                fontSize: '1.1rem',
+                letterSpacing: '0.08em',
+                padding: '0.85rem 1.9rem',
+                borderRadius: 4,
+                boxShadow: '0 4px 18px rgba(240,224,64,0.22)',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 26px rgba(240,224,64,0.38)'
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform = 'none'
+                ;(e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 18px rgba(240,224,64,0.22)'
+              }}
+            >
+              {(heroSlides[activeSlide] as { cta: { label: string; href: string } }).cta.label}
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          ) : (
+            <a
+              href="#waitlist"
             className="inline-flex items-center gap-[0.55rem] font-condensed font-black italic uppercase no-underline transition-all duration-150"
             style={{
               background: 'var(--yellow)',
@@ -151,6 +198,7 @@ export default function HeroSection() {
               <polyline points="12 5 19 12 12 19"/>
             </svg>
           </a>
+          )}
         </div>
 
         <div

@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { CartProduct, SelectedVehicle } from './cartStore'
 
 interface CatalogRow {
+  product_id?: number | null
   marca: string
   modelo: string
   anio: number
@@ -20,12 +21,9 @@ interface CatalogRow {
   liquidacion: boolean | null
   activo: boolean | null
   especificaciones?: Record<string, unknown> | null
-  vendedor: string | null
-}
-
-interface ProductImageRow {
-  sku: string
-  imagen_url: string | null
+  vendedor?: string | null
+  vendedor_id?: number | null
+  imagen_url?: string | null
 }
 
 export interface CatalogProduct extends Omit<CartProduct, 'qty'> {
@@ -100,36 +98,48 @@ export async function getCatalogProducts(
     if (error) throw error
 
     const rows = (data as CatalogRow[] | null) ?? []
-    const skus = Array.from(new Set(rows.map((item) => item.sku).filter(Boolean)))
-    const imageBySku = new Map<string, string>()
 
-    if (skus.length > 0) {
-      const { data: imageRows, error: imageError } = await supabase
-        .from('productos')
-        .select('sku, imagen_url')
-        .in('sku', skus)
-        .not('imagen_url', 'is', null)
+    // Collect numeric product IDs for fotos_producto query (new photo system)
+    const productIds = Array.from(
+      new Set(
+        rows
+          .map((item) => (item.product_id != null ? Number(item.product_id) : null))
+          .filter((id): id is number => id != null && !isNaN(id))
+      )
+    )
 
-      if (!imageError) {
-        ;((imageRows as ProductImageRow[] | null) ?? []).forEach((row) => {
-          if (row.sku && row.imagen_url) {
-            imageBySku.set(row.sku, row.imagen_url)
+    const imageByProductId = new Map<number, string>()
+
+    // Fetch from fotos_producto (new system — vendor-uploaded photos)
+    if (productIds.length > 0) {
+      const { data: fotoRows, error: fotoError } = await supabase
+        .from('fotos_producto')
+        .select('producto_id, url')
+        .in('producto_id', productIds)
+        .order('orden')
+
+      if (!fotoError && fotoRows) {
+        ;(fotoRows as { producto_id: number; url: string }[]).forEach((row) => {
+          const pid = Number(row.producto_id)
+          if (!isNaN(pid) && row.url && !imageByProductId.has(pid)) {
+            imageByProductId.set(pid, row.url)
           }
         })
       }
     }
 
     return rows.map((item, index) => ({
-      id: `${item.sku}-${index}`,
+      id: String(item.product_id ?? `${item.sku}-${index}`),
       name: item.producto,
       brand: item.marca_pieza || 'Sin marca',
       ref: item.numero_parte_oem || item.sku || 'S/N',
       price: Number(item.precio_oferta ?? item.precio ?? 0),
-      seller: item.vendedor || 'Vendedor verificado',
+      seller: item.vendedor || (item.vendedor_id ? `Vendedor #${item.vendedor_id}` : 'Vendedor verificado'),
       sellerRating: 5,
       delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
       category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
-      image: imageBySku.get(item.sku) || undefined,
+      image: (item.product_id != null ? imageByProductId.get(Number(item.product_id)) : undefined)
+        ?? (item.imagen_url || undefined),
       group: item.grupo || 'General',
       subgroup: resolveSubgroup(item),
       version: item.version,

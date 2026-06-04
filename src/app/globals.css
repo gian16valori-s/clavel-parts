@@ -95,6 +95,134 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* ── Hero: desktop base styles (moved from inline) ── */
+.hero-grid {
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: clamp(250px, 30%, 400px) minmax(0, 1fr);
+  min-height: calc(100vh - 126px);
+  height: calc(100vh - 126px);
+}
+.hero-selector {
+  min-height: calc(100vh - 126px);
+}
+.hero-visual {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 767px) {
+  /* Hero: columna única */
+  .hero-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: auto;
+  }
+  .hero-selector {
+    min-height: auto;
+    border-right: none;
+    border-bottom: 2px solid var(--dark4);
+  }
+  .hero-visual {
+    min-height: 65vw;
+    height: 65vw;
+  }
+
+  /* Secciones: padding lateral reducido */
+  .section-px {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Grids */
+  .grid-6col { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid-3col { grid-template-columns: 1fr !important; }
+  .grid-4col { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Footer */
+  .footer-flex {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    text-align: center !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Waitlist form */
+  .waitlist-form { flex-direction: column !important; }
+
+  /* Hero title size */
+  .hero-title { font-size: 2.8rem !important; }
+
+  /* Topbar icon labels */
+  .topbar-label { display: none !important; }
+
+  /* Navbar mobile menu */
+  .navbar-links { display: none !important; }
+  .navbar-hamburger { display: flex !important; }
+  .navbar-mobile-open .navbar-links {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    top: 48px !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #000 !important;
+    border-bottom: 2px solid var(--dark4) !important;
+    z-index: 400 !important;
+    padding: 0.5rem 0 !important;
+  }
+  .navbar-mobile-open .navbar-links .nav-link {
+    height: 44px !important;
+    padding: 0 1.2rem !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    width: 100% !important;
+  }
+
+  /* ResultsGrid: barra superior */
+  .results-topbar {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+  .results-vehicle-label {
+    font-size: 0.72rem !important;
+    max-width: 140px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .results-catalog-label { display: none !important; }
+
+  /* ResultsGrid: layout */
+  .results-layout { flex-direction: column !important; }
+
+  /* FiltersPanel: colapsado en mobile */
+  .filters-panel-desktop { display: none !important; }
+  .filters-panel-mobile-bar { display: flex !important; }
+
+  /* CartPage: columna única */
+  .cart-grid {
+    grid-template-columns: 1fr !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .cart-topbar {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* GaragePage */
+  .garage-layout { padding-top: 78px !important; }
+}
+
 /* ── Hero background grid ── */
 .hero-bg-grid {
   position: absolute;

@@ -1,7 +1,7 @@
 export default function LetterSection() {
   return (
     <div
-      className="flex items-center justify-center px-10 py-16"
+      className="flex items-center justify-center section-px px-10 py-16"
       style={{ background: 'var(--dark2)' }}
     >
       <div

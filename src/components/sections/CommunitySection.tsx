@@ -7,7 +7,7 @@ const cards = [
 
 export default function CommunitySection() {
   return (
-    <section className="px-10 py-[4.5rem]" style={{ background: 'var(--dark)' }}>
+    <section className="section-px px-10 py-[4.5rem]" style={{ background: 'var(--dark)' }}>
       <div className="text-center mb-12">
         <span
           className="inline-block font-condensed font-bold uppercase mb-[0.9rem]"
@@ -33,7 +33,7 @@ export default function CommunitySection() {
         </p>
       </div>
 
-      <div className="grid gap-[1.1rem] max-w-[1100px] mx-auto" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="grid gap-[1.1rem] max-w-[1100px] mx-auto grid-4col" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         {cards.map((card) => (
           <div
             key={card.title}

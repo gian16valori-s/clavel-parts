@@ -2,9 +2,13 @@
 
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/lib/cartStore'
+import { markCatalogReturnUrl, readCatalogNavigationSnapshot, saveCatalogNavigationSnapshot } from '@/lib/catalogNavigationState'
 import { getCatalogProducts, type CatalogProduct } from '@/lib/supabaseCatalog'
 import { getCategoryImage } from '@/lib/categoryImages'
+import Topbar from '@/components/layout/Topbar'
+import Navbar from '@/components/layout/Navbar'
 import FiltersPanel from './FiltersPanel'
 import ListingCard from './ListingCard'
 
@@ -19,7 +23,7 @@ const MAIN_CATEGORIES = [
   { label: 'Transmisión', aliases: ['Transmisión'] },
   { label: 'Embrague', aliases: ['Embrague'] },
   { label: 'Electricidad', aliases: ['Electricidad'] },
-  { label: 'Interior', aliases: ['Interior', 'Electricidad Interior'] },
+  { label: 'Interior', aliases: ['Interior'] },
   { label: 'A/C y Calefacción', aliases: ['A/C y Calefacción', 'Calefacción', 'Climatización'] },
   { label: 'Inyección y Admisión', aliases: ['Inyección y Admisión', 'Inyección', 'Admisión', 'Combustible / Inyección'] },
   { label: 'Refrigeración', aliases: ['Refrigeración'] },
@@ -206,10 +210,10 @@ const DEMO_CATALOG_PRODUCTS: CatalogProduct[] = [
   createDemoProduct('freno-pastilla-cer', 'Frenos', 'Pastillas', 'Pastillas de freno cerámicas traseras', 'Brembo', 'P06099N', 33800),
   createDemoProduct('freno-liquido-dot4', 'Frenos', 'Líquido', 'Líquido de frenos DOT 4 LV', 'ATE', '706202', 12900, { liquidation: true }),
   createDemoProduct('freno-sensor-desgaste', 'Frenos', 'Sensores', 'Sensor de desgaste de pastillas', 'Textar', '98044300', 8900),
-  createDemoProduct('elec-alt', 'Electricidad', 'Alternador', 'Alternador 120A remanufacturado', 'Bosch', '0121715001', 149000),
-  createDemoProduct('elec-sensor', 'Electricidad', 'Sensores', 'Sensor ABS delantero', 'ATE', '24.0711', 33800),
-  createDemoProduct('elec-arranque', 'Electricidad', 'Arranque', 'Motor de arranque 1.4kW', 'Valeo', '438329', 127000),
-  createDemoProduct('elec-modulo', 'Electricidad', 'Módulos', 'Módulo confort levantavidrios', 'Hella', '5DK 008 214-00', 69200),
+  createDemoProduct('elec-alt', 'Interior', 'Alternador', 'Alternador 120A remanufacturado', 'Bosch', '0121715001', 149000),
+  createDemoProduct('elec-sensor', 'Interior', 'Sensores', 'Sensor ABS delantero', 'ATE', '24.0711', 33800),
+  createDemoProduct('elec-arranque', 'Interior', 'Arranque', 'Motor de arranque 1.4kW', 'Valeo', '438329', 127000),
+  createDemoProduct('elec-modulo', 'Interior', 'Módulos', 'Módulo confort levantavidrios', 'Hella', '5DK 008 214-00', 69200),
   createDemoProduct('int-panel', 'Interior', 'Paneles', 'Panel interior de puerta delantera', 'BMW', '51419123456', 98000, { seller: 'Cabina Premium', stock: 2 }),
   createDemoProduct('int-comando', 'Interior', 'Comandos', 'Botonera levantavidrios conductor', 'BMW', '61319217332', 42900, { seller: 'Cabina Premium', stock: 5 }),
   createDemoProduct('int-tapizado', 'Interior', 'Tapizados', 'Fuelle y perilla de cambios', 'BMW', '25117527252', 38900, { seller: 'Cabina Premium' }),
@@ -241,14 +245,20 @@ function normalizeValue(value: string) {
     .toLowerCase()
 }
 
+function canonicalGroupName(group: string) {
+  const normalized = normalizeValue(group)
+  if (normalized === 'electricidad interior') return 'Interior'
+  return group
+}
+
 function matchesCategory(product: CatalogProduct, category: string) {
   if (category === 'TODOS') return true
   if (category === 'Liquidaciones') return product.liquidation
 
   const categoryConfig = MAIN_CATEGORIES.find((item) => item.label === category)
-  if (!categoryConfig) return product.group === category
+  if (!categoryConfig) return canonicalGroupName(product.group) === category
 
-  const normalizedGroup = normalizeValue(product.group)
+  const normalizedGroup = normalizeValue(canonicalGroupName(product.group))
   return categoryConfig.aliases.some((alias) => normalizeValue(alias) === normalizedGroup)
 }
 
@@ -260,14 +270,24 @@ function getCategoryDetail(category: string) {
 }
 
 export default function ResultsGrid() {
+  const router = useRouter()
   const { vehicle, searchQuery, setView, cartCount } = useAppStore()
   const [toast, setToast] = useState(false)
   const [products, setProducts] = useState<CatalogProduct[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGroup, setSelectedGroup] = useState('TODOS')
   const [selectedSubgroup, setSelectedSubgroup] = useState(ALL_SUBGROUP)
+  const [skipNextReset, setSkipNextReset] = useState(false)
+
+  useEffect(() => {
+    const snapshot = readCatalogNavigationSnapshot()
+    if (!snapshot) return
+
+    setSelectedGroup(snapshot.selectedGroup || 'TODOS')
+    setSelectedSubgroup(snapshot.selectedSubgroup || ALL_SUBGROUP)
+    setSkipNextReset(true)
+  }, [])
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -293,9 +313,14 @@ export default function ResultsGrid() {
   }, [vehicle, searchQuery])
 
   useEffect(() => {
+    if (skipNextReset) {
+      setSkipNextReset(false)
+      return
+    }
+
     setSelectedGroup('TODOS')
     setSelectedSubgroup(ALL_SUBGROUP)
-  }, [vehicle?.brand, vehicle?.model, vehicle?.year, vehicle?.engine, searchQuery])
+  }, [vehicle?.brand, vehicle?.model, vehicle?.year, vehicle?.engine, searchQuery, skipNextReset])
 
   useEffect(() => {
     setSelectedSubgroup(ALL_SUBGROUP)
@@ -304,6 +329,19 @@ export default function ResultsGrid() {
   function showToast() {
     setToast(true)
     setTimeout(() => setToast(false), 2200)
+  }
+
+  function openProduct(item: CatalogProduct) {
+    saveCatalogNavigationSnapshot({
+      vehicle,
+      searchQuery,
+      selectedGroup,
+      selectedSubgroup,
+    })
+
+    markCatalogReturnUrl()
+
+    router.push(`/productos/${encodeURIComponent(String(item.id))}`)
   }
 
   const categoryDetail = useMemo(() => getCategoryDetail(selectedGroup), [selectedGroup])
@@ -320,11 +358,17 @@ export default function ResultsGrid() {
       .filter((category) => category.count > 0)
 
     const knownNames = new Set<string>(known.map((item) => item.name))
-    const unknownGroups = Array.from(new Set(catalogProducts.map((product) => product.group).filter(Boolean)))
+    const unknownGroups = Array.from(
+      new Set(
+        catalogProducts
+          .map((product) => canonicalGroupName(product.group))
+          .filter(Boolean)
+      )
+    )
       .filter((groupName) => !knownNames.has(groupName))
       .map((groupName) => ({
         name: groupName,
-        count: catalogProducts.filter((product) => product.group === groupName).length,
+        count: catalogProducts.filter((product) => canonicalGroupName(product.group) === groupName).length,
         image: getCategoryImage(groupName),
       }))
 
@@ -379,20 +423,31 @@ export default function ResultsGrid() {
       ? `Búsqueda general · ${searchQuery}`
       : 'Tu vehículo'
 
+  function handleBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    setView('home')
+  }
+
   return (
     <div
       id="results-page"
       className="fixed inset-0 z-[400] overflow-y-auto"
       style={{ background: 'var(--dark)' }}
     >
+      <Topbar isSticky={false} />
+      <Navbar isSticky={false} />
+
       <div
-        className="sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
+        className="results-topbar sticky top-0 z-10 flex items-center justify-between px-10 border-b-2"
         style={{ background: 'var(--dark2)', height: 64, borderColor: 'var(--dark3)' }}
       >
         <button
           className="flex items-center gap-2 font-condensed font-bold uppercase tracking-[0.06em] transition-colors duration-200"
           style={{ background: 'none', border: 'none', color: 'var(--gray2)', fontSize: '0.95rem', cursor: 'pointer' }}
-          onClick={() => setView('home')}
+          onClick={handleBack}
           onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray2)')}
         >
@@ -404,7 +459,7 @@ export default function ResultsGrid() {
         </button>
 
         <div
-          className="flex items-center gap-2 px-4 py-[0.4rem] rounded-[20px] font-condensed font-bold uppercase tracking-[0.05em]"
+          className="results-vehicle-label flex items-center gap-2 px-4 py-[0.4rem] rounded-[20px] font-condensed font-bold uppercase tracking-[0.05em]"
           style={{
             background: 'var(--dark3)',
             border: '1px solid var(--dark4)',
@@ -416,15 +471,16 @@ export default function ResultsGrid() {
         </div>
 
         <div
-          className="font-condensed font-bold uppercase tracking-[0.06em]"
+          className="results-catalog-label font-condensed font-bold uppercase tracking-[0.06em]"
           style={{ fontSize: '0.9rem', color: 'var(--gray)' }}
         >
           CATÁLOGO COMPATIBLE
         </div>
       </div>
 
-      <div className="flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <div className="results-layout flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
         {selectedGroup !== 'TODOS' && (
+          <div className="filters-panel-desktop">
           <FiltersPanel
             groups={groups}
             subgroups={subgroups}
@@ -433,6 +489,7 @@ export default function ResultsGrid() {
             onSelectGroup={setSelectedGroup}
             onSelectSubgroup={setSelectedSubgroup}
           />
+          </div>
         )}
 
         <main className="flex-1 p-8" style={{ background: 'var(--light-bg)' }}>
@@ -684,7 +741,7 @@ export default function ResultsGrid() {
                       key={product.id}
                       product={product}
                       onAdded={showToast}
-                      onOpen={(item) => setSelectedProduct(item as CatalogProduct)}
+                      onOpen={(item) => openProduct(item as CatalogProduct)}
                     />
                   ))}
                 </div>
@@ -693,72 +750,6 @@ export default function ResultsGrid() {
           )}
         </main>
       </div>
-
-      {selectedProduct && (
-        <div
-          className="fixed inset-0 z-[450] flex items-center justify-center px-4"
-          style={{ background: 'rgba(0,0,0,0.6)' }}
-          onClick={() => setSelectedProduct(null)}
-        >
-          <div
-            className="w-full max-w-2xl rounded-xl overflow-hidden"
-            style={{ background: 'var(--dark2)', border: '1px solid var(--dark3)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="grid md:grid-cols-2">
-              <div className="relative" style={{ minHeight: 280, background: 'var(--dark3)' }}>
-                <Image
-                  src={selectedProduct.image || getCategoryImage(selectedProduct.category)}
-                  alt={selectedProduct.name}
-                  fill
-                  className="object-contain p-6"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-              <div className="p-6">
-                <div className="font-condensed font-extrabold uppercase text-white" style={{ fontSize: '1.3rem' }}>
-                  {selectedProduct.name}
-                </div>
-                <div className="mt-2" style={{ color: 'var(--gray2)', fontSize: '0.9rem' }}>
-                  {selectedProduct.brand} · Ref: {selectedProduct.ref}
-                </div>
-                <div className="mt-3" style={{ color: 'var(--gray)', fontSize: '0.85rem' }}>
-                  {selectedProduct.group} · {selectedProduct.subgroup}
-                </div>
-                <div className="mt-1" style={{ color: 'var(--gray)', fontSize: '0.85rem' }}>
-                  Compatibilidad: {selectedProduct.version} · {selectedProduct.engine}
-                </div>
-
-                <div className="mt-4 font-condensed font-black" style={{ fontSize: '1.8rem', color: 'var(--yellow)' }}>
-                  ${selectedProduct.price.toLocaleString('es-AR')}
-                </div>
-
-                <div className="mt-1" style={{ color: 'var(--gray2)', fontSize: '0.9rem' }}>
-                  Stock: {selectedProduct.stock}
-                </div>
-
-                <div className="mt-5 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProduct(null)}
-                    className="font-condensed font-bold uppercase"
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid var(--dark4)',
-                      color: 'var(--gray2)',
-                      padding: '0.6rem 1rem',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {cartCount() > 0 && (
         <button

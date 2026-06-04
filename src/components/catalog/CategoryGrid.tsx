@@ -20,7 +20,7 @@ const categories = [
 
 export default function CategoryGrid() {
   return (
-    <section className="px-10 py-[4.5rem]" style={{ background: 'var(--light-bg)' }}>
+    <section className="section-px px-10 py-[4.5rem]" style={{ background: 'var(--light-bg)' }}>
       <div className="text-center mb-[2.8rem]">
         <h2
           className="font-condensed font-black italic uppercase tracking-[0.06em]"
@@ -31,7 +31,7 @@ export default function CategoryGrid() {
       </div>
 
       <div
-        className="grid gap-4 max-w-[1200px] mx-auto mb-8"
+        className="grid gap-4 max-w-[1200px] mx-auto mb-8 grid-6col"
         style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}
       >
         {categories.map((cat) => (

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getVendedorActual, logoutVendedor, type Vendedor } from '@/lib/vendedorAuth';
 import { getProductosVendedorActual, type ProductoVendedorResumen } from '@/lib/vendedorProducts';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabase';
 
 // Quitar lógica y estado del formulario anterior
 

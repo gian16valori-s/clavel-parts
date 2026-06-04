@@ -101,8 +101,6 @@ function normalizeText(value: string) {
 }
 
 function getGrupoDisplayName(nombre: string) {
-  const normalized = normalizeText(nombre);
-  if (normalized === "electricidad interior") return "Interior";
   return nombre;
 }
 
@@ -383,6 +381,15 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   const [nombre, setNombre] = useState("");
   const [numeroParteOem, setNumeroParteOem] = useState("");
   const [marca, setMarca] = useState("");
+  const [familiaProducto, setFamiliaProducto] = useState<"general" | "tre_performance">("general");
+  const [descripcionCorta, setDescripcionCorta] = useState("");
+  const [descripcionLarga, setDescripcionLarga] = useState("");
+  const [material, setMaterial] = useState("");
+  const [garantiaMeses, setGarantiaMeses] = useState<number | "">("");
+  const [pesoKg, setPesoKg] = useState<number | "">("");
+  const [altoCm, setAltoCm] = useState<number | "">("");
+  const [anchoCm, setAnchoCm] = useState<number | "">("");
+  const [largoCm, setLargoCm] = useState<number | "">("");
   const [precio, setPrecio] = useState<number | "">("");
   const [stock, setStock] = useState<number | "">(0);
   const [imageFiles, setImageFiles] = useState<(File | null)[]>([null, null, null]);
@@ -492,7 +499,16 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     setTiposLoaded(false);
     setSelectedVersiones([]);
     setNombre("");
+    setDescripcionCorta("");
+    setDescripcionLarga("");
     setMarca("");
+    setMaterial("");
+    setGarantiaMeses("");
+    setPesoKg("");
+    setAltoCm("");
+    setAnchoCm("");
+    setLargoCm("");
+    setFamiliaProducto("general");
     setPrecio("");
     setStock(0);
     setImageFiles([null, null, null]);
@@ -560,7 +576,16 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           grupo_id: Number(grupoId) || null,
           subgrupo_id: Number(subgrupoId) || null,
           marca_pieza: marca.trim(),
+          familia: familiaProducto === "tre_performance" ? "tre_performance" : null,
           numero_parte_oem: numeroParteOem.trim() || null,
+          descripcion_corta: descripcionCorta.trim() || null,
+          descripcion_larga: descripcionLarga.trim() || null,
+          material: material.trim() || null,
+          garantia_meses: garantiaMeses === "" ? null : Number(garantiaMeses),
+          peso_kg: pesoKg === "" ? null : Number(pesoKg),
+          alto_cm: altoCm === "" ? null : Number(altoCm),
+          ancho_cm: anchoCm === "" ? null : Number(anchoCm),
+          largo_cm: largoCm === "" ? null : Number(largoCm),
           precio: precioNum,
           stock: stockNum,
           vendedor_id: vendedorId,
@@ -1107,6 +1132,107 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 required
                 style={inputStyle}
               />
+
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Descripción corta</label>
+              <input
+                placeholder="Resumen corto del producto"
+                value={descripcionCorta}
+                onChange={(e) => setDescripcionCorta(e.target.value)}
+                style={inputStyle}
+              />
+
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Descripción larga</label>
+              <textarea
+                placeholder="Detalles tecnicos, montaje, estado, observaciones"
+                value={descripcionLarga}
+                onChange={(e) => setDescripcionLarga(e.target.value)}
+                rows={5}
+                style={{ ...inputStyle, resize: "vertical", minHeight: 120 }}
+              />
+
+              <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Material</label>
+                  <input
+                    placeholder="Ej. aluminio, goma, acero"
+                    value={material}
+                    onChange={(e) => setMaterial(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Garantía (meses)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Ej. 6"
+                    value={garantiaMeses}
+                    onChange={(e) => setGarantiaMeses(e.target.value ? Number(e.target.value) : "")}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Peso (kg)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.001"
+                    placeholder="Ej. 1.250"
+                    value={pesoKg}
+                    onChange={(e) => setPesoKg(e.target.value ? Number(e.target.value) : "")}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Alto (cm)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="Ej. 12.5"
+                    value={altoCm}
+                    onChange={(e) => setAltoCm(e.target.value ? Number(e.target.value) : "")}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Ancho (cm)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="Ej. 24.0"
+                    value={anchoCm}
+                    onChange={(e) => setAnchoCm(e.target.value ? Number(e.target.value) : "")}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Largo (cm)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="Ej. 35.0"
+                    value={largoCm}
+                    onChange={(e) => setLargoCm(e.target.value ? Number(e.target.value) : "")}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Destino del producto</label>
+              <select
+                value={familiaProducto}
+                onChange={(e) => setFamiliaProducto(e.target.value as "general" | "tre_performance")}
+                style={inputStyle}
+              >
+                <option value="general">Catalogo general</option>
+                <option value="tre_performance">The Racer&apos;s Edge Performance</option>
+              </select>
+              <div style={{ color: "#6b7280", fontSize: 13, marginTop: -6, marginBottom: 12, lineHeight: 1.4 }}>
+                Elegi TRE Performance para que el producto aparezca en la seccion The Racer&apos;s Edge y en sus menus de vehiculos.
+              </div>
 
               <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Precio</label>
               <input

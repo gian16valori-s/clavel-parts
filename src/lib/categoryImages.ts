@@ -31,6 +31,8 @@ const CATEGORY_IMAGES: Record<string, string> = {
   ruedas: '/categories/neumaticos y llantas.png',
   neumaticos: '/categories/neumaticos y llantas.png',
   carroceria: '/categories/carroceria.png',
+  opticas: '/categories/carroceria.png',
+  iluminacion: '/categories/carroceria.png',
   accesorios: '/categories/accesorios.png',
   liquidaciones: '/categories/luiquidaciones.png',
   otros: '/categories/otros.png',

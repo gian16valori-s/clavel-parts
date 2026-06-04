@@ -5,6 +5,7 @@ export interface NuevoProductoInput {
   sku: string
   producto: string
   tipo_pieza: string
+  familia?: string | null
   marca_pieza?: string
   numero_parte_oem?: string
   precio: number
@@ -101,6 +102,7 @@ export async function crearProductoVendedor(input: NuevoProductoInput) {
       sku: input.sku.trim(),
       producto: input.producto.trim(),
       tipo_pieza: input.tipo_pieza.trim(),
+      familia: input.familia?.trim() || null,
       marca_pieza: input.marca_pieza?.trim() || null,
       numero_parte_oem: input.numero_parte_oem?.trim() || null,
       precio: Number(input.precio),
