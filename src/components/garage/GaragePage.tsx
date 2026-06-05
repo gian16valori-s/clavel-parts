@@ -1,64 +1,159 @@
 'use client'
 
-import { useState } from 'react'
-import { useAppStore } from '@/lib/cartStore'
-import { demoGarageCars } from '@/lib/garageData'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
+import {
+  getGarageVehicles,
+  getGarageStats,
+  type GarageVehicle,
+  type GarageStats,
+} from '@/lib/garageService'
 import CarShowcase from './CarShowcase'
+import CarSidebar  from './CarSidebar'
+import GaragePanel from './GaragePanel'
+import AddCarModal  from './AddCarModal'
 
 export default function GaragePage() {
-  const { setView } = useAppStore()
-  const [activeCar, setActiveCar] = useState(demoGarageCars[0])
+  const router = useRouter()
+  const [user,      setUser]      = useState<User | null>(null)
+  const [vehicles,  setVehicles]  = useState<GarageVehicle[]>([])
+  const [stats,     setStats]     = useState<GarageStats>({ vehiclesCount: 0, favoritesCount: 0, alertsUnreadCount: 0 })
+  const [activeCar, setActiveCar] = useState<GarageVehicle | null>(null)
+  const [loading,      setLoading]      = useState(true)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingCar,   setEditingCar]   = useState<GarageVehicle | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadData(userId: string) {
+      const [vehiclesData, statsData] = await Promise.all([
+        getGarageVehicles(userId),
+        getGarageStats(userId),
+      ])
+      if (cancelled) return
+      setVehicles(vehiclesData)
+      setStats(statsData)
+      setActiveCar(vehiclesData[0] ?? null)
+      setLoading(false)
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      if (!data.session?.user) { router.replace('/login'); return }
+      setUser(data.session.user)
+      void loadData(data.session.user.id)
+    })
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return
+      if (!session?.user) { router.replace('/login'); return }
+      setUser(session.user)
+    })
+
+    return () => {
+      cancelled = true
+      sub.subscription.unsubscribe()
+    }
+  }, [router])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  function handleCarAdded(car: GarageVehicle) {
+    setVehicles((prev) => [car, ...prev])
+    setStats((prev) => ({ ...prev, vehiclesCount: prev.vehiclesCount + 1 }))
+    setActiveCar(car)
+    setShowAddModal(false)
+  }
+
+  function handleCarUpdated(car: GarageVehicle) {
+    setVehicles((prev) => prev.map((item) => (item.id === car.id ? car : item)))
+    setActiveCar((prev) => (prev?.id === car.id ? car : prev))
+    setEditingCar(null)
+  }
+
+  function handleCarDeleted(vehicleId: string) {
+    setVehicles((prev) => {
+      const nextVehicles = prev.filter((item) => item.id !== vehicleId)
+      setActiveCar((current) => {
+        if (current?.id !== vehicleId) return current
+        return nextVehicles[0] ?? null
+      })
+      return nextVehicles
+    })
+    setStats((prev) => ({ ...prev, vehiclesCount: Math.max(0, prev.vehiclesCount - 1) }))
+    setEditingCar(null)
+  }
+
+  if (loading || !user) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center"
+        style={{ background: '#080a0c' }}
+      >
+        <div style={{ color: '#444', fontFamily: '"Barlow Condensed", sans-serif', fontSize: '1rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          Cargando garage...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
       className="fixed inset-0 z-[100] overflow-hidden flex flex-col"
       style={{ background: '#080a0c' }}
     >
-      {/* ── Main layout ── */}
-      <div className="garage-layout flex flex-1 overflow-hidden" style={{ paddingTop: 126 }}>
-        {/* LEFT — Car showcase */}
-        <CarShowcase car={activeCar} />
+      <div className="garage-layout relative flex flex-1 overflow-hidden" style={{ paddingTop: 126 }}>
+
+        {/* LEFT — sidebar de autos (solo si hay al menos 1) */}
+        {vehicles.length > 0 && (
+          <CarSidebar
+            vehicles={vehicles}
+            activeId={activeCar?.id ?? null}
+            onSelect={setActiveCar}
+            onAdd={() => setShowAddModal(true)}
+          />
+        )}
+
+        {/* CENTER — showcase del auto activo */}
+        <CarShowcase car={activeCar} hasVehicles={vehicles.length > 0} />
+
+        {/* RIGHT — panel del usuario */}
+        <GaragePanel
+          user={user}
+          vehicles={vehicles}
+          activeVehicle={activeCar}
+          onSelectCar={setActiveCar}
+          onEditCar={setEditingCar}
+          stats={stats}
+          onLogout={handleLogout}
+          onAddCar={() => setShowAddModal(true)}
+        />
+
       </div>
 
-      {/* ── Car selector bottom strip (if multiple cars) ── */}
-      {demoGarageCars.length > 1 && (
-        <div
-          className="flex gap-3 px-8 py-3 border-t flex-shrink-0"
-          style={{ background: 'rgba(10,12,14,0.9)', borderColor: 'rgba(255,255,255,0.06)' }}
-        >
-          {demoGarageCars.map((car) => (
-            <button
-              key={car.id}
-              onClick={() => setActiveCar(car)}
-              className="flex items-center gap-2 px-4 py-2 rounded font-condensed font-bold uppercase transition-all duration-200"
-              style={{
-                background: activeCar.id === car.id ? 'var(--yellow)' : 'rgba(255,255,255,0.05)',
-                color: activeCar.id === car.id ? 'var(--text-dark)' : 'var(--gray2)',
-                border: `1px solid ${activeCar.id === car.id ? 'var(--yellow)' : 'rgba(255,255,255,0.1)'}`,
-                fontSize: '0.8rem',
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-              }}
-            >
-              {car.brand} {car.model} · {car.year}
-            </button>
-          ))}
-          <button
-            className="flex items-center gap-2 px-4 py-2 rounded font-condensed font-bold uppercase transition-all duration-200"
-            style={{
-              background: 'none',
-              color: 'var(--gray)',
-              border: '1px dashed rgba(255,255,255,0.15)',
-              fontSize: '0.8rem',
-              letterSpacing: '0.08em',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--yellow)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--gray)')}
-          >
-            + AGREGAR AUTO
-          </button>
-        </div>
+      {/* Modal agregar auto */}
+      {showAddModal && (
+        <AddCarModal
+          userId={user.id}
+          onClose={() => setShowAddModal(false)}
+          onSaved={handleCarAdded}
+        />
+      )}
+
+      {editingCar && (
+        <AddCarModal
+          userId={user.id}
+          vehicle={editingCar}
+          onClose={() => setEditingCar(null)}
+          onSaved={handleCarUpdated}
+          onDeleted={handleCarDeleted}
+        />
       )}
     </div>
   )

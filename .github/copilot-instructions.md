@@ -31,3 +31,19 @@ Recovery steps:
 
 ## Change discipline
 If a protected file really must be edited, explain why and keep the diff isolated and minimal.
+
+## Stack del proyecto
+
+- Next.js 14.2 — App Router (`src/app/`)
+- TypeScript 5 + React 18
+- Tailwind CSS 3
+- Supabase (cliente en `src/lib/supabase.ts` y variantes `supabaseCatalog.ts`, `supabaseTRE.ts`, `supabaseVehicles.ts`)
+- Zustand para estado global (`src/lib/cartStore.ts`)
+
+## Reglas de generación de código
+
+- Usar Route Handlers en `src/app/api/.../route.ts` con `NextRequest` / `NextResponse`
+- Usar Server Components por defecto; agregar `"use client"` solo cuando haya interactividad (hooks, eventos del DOM)
+- Importar Supabase desde `@/lib/supabase` (o el específico según contexto: catalog, TRE, vehicles)
+- No usar el router `pages/` ni `getServerSideProps` ni `getStaticProps`
+- Usar Zustand (`@/lib/cartStore`) para estado global del carrito
