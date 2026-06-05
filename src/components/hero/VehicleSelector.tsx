@@ -19,7 +19,7 @@ function uniqueSorted(values: string[]) {
 }
 
 export default function VehicleSelector() {
-  const { setVehicle, setView, setSearchQuery } = useAppStore()
+  const { vehicle, setVehicle, setView, setSearchQuery } = useAppStore()
 
   const [rows, setRows] = useState<CatalogVehicleRow[]>([])
 
@@ -105,6 +105,77 @@ export default function VehicleSelector() {
     )
   }, [rows, brandName, modelName, year])
 
+  const visibleBrands = useMemo(() => {
+    if (!vehicle?.brand) return brands
+    return brands.includes(vehicle.brand) ? brands : uniqueSorted([...brands, vehicle.brand])
+  }, [brands, vehicle?.brand])
+
+  const visibleModels = useMemo(() => {
+    if (!brandName) return []
+    const base = uniqueSorted(rows.filter((item) => item.marca === brandName).map((item) => item.modelo))
+    if (!vehicle?.model || vehicle.brand !== brandName) return base
+    return base.includes(vehicle.model) ? base : uniqueSorted([...base, vehicle.model])
+  }, [rows, brandName, vehicle])
+
+  const visibleYears = useMemo(() => {
+    if (!brandName || !modelName) return []
+    const base = Array.from(
+      new Set(
+        rows
+          .filter((item) => item.marca === brandName && item.modelo === modelName)
+          .map((item) => String(item.anio))
+      )
+    ).sort((a, b) => Number(b) - Number(a))
+
+    if (!vehicle?.year || vehicle.brand !== brandName || vehicle.model !== modelName) return base
+    return base.includes(vehicle.year) ? base : [vehicle.year, ...base]
+  }, [rows, brandName, modelName, vehicle])
+
+  const visibleVersions = useMemo(() => {
+    if (!brandName || !modelName || !year) return []
+
+    const base = versions
+    if (
+      vehicle?.brand === brandName &&
+      vehicle?.model === modelName &&
+      vehicle?.year === year &&
+      vehicle.versionLabel &&
+      vehicle.engine
+    ) {
+      const key = `${vehicle.versionLabel}__${vehicle.engine}`
+      if (!base.some((item) => item.key === key)) {
+        return [...base, { key, label: vehicle.versionLabel, engine: vehicle.engine }]
+      }
+    }
+
+    return base
+  }, [versions, brandName, modelName, year, vehicle])
+
+  useEffect(() => {
+    if (!vehicle) {
+      setBrandName('')
+      setModelName('')
+      setYear('')
+      setVersionKey('')
+      setVersionLabel('')
+      setEngine('')
+      return
+    }
+
+    setBrandName(vehicle.brand)
+    setModelName(vehicle.model)
+    setYear(vehicle.year)
+    setVersionLabel(vehicle.versionLabel ?? '')
+    setEngine(vehicle.engine ?? '')
+  }, [vehicle])
+
+  useEffect(() => {
+    if (!vehicle || !brandName || !modelName || !year || !versionLabel || !engine) return
+    const key = `${versionLabel}__${engine}`
+    const selected = visibleVersions.find((item) => item.key === key)
+    setVersionKey(selected?.key ?? '')
+  }, [vehicle, brandName, modelName, year, versionLabel, engine, visibleVersions])
+
   const isComplete = Boolean(brandName && modelName && year && versionLabel && engine)
 
   function handleVersionChange(nextKey: string) {
@@ -182,7 +253,7 @@ export default function VehicleSelector() {
           }}
         >
           <option value="">{loading ? 'CARGANDO MARCAS…' : 'MARCA'}</option>
-          {brands.map((item) => (
+          {visibleBrands.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -206,7 +277,7 @@ export default function VehicleSelector() {
           }}
         >
           <option value="">MODELO</option>
-          {models.map((item) => (
+          {visibleModels.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -228,7 +299,7 @@ export default function VehicleSelector() {
           }}
         >
           <option value="">AÑO</option>
-          {years.map((item) => (
+          {visibleYears.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -245,7 +316,7 @@ export default function VehicleSelector() {
           onChange={(e) => handleVersionChange(e.target.value)}
         >
           <option value="">MOTOR / VERSIÓN</option>
-          {versions.map((item) => (
+          {visibleVersions.map((item) => (
             <option key={item.key} value={item.key}>
               {item.label} {item.engine ? `· ${item.engine}` : ''}
             </option>

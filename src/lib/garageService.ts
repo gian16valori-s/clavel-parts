@@ -15,6 +15,8 @@ export interface GarageVehicle {
   brand: string
   model: string
   version: string
+  versionLabel: string
+  engine: string
   year: string
   // Extra fields
   plate: string
@@ -156,6 +158,8 @@ async function hydrateVehicleRows(rows: RawGarageVehicleRow[]): Promise<GarageVe
     const displayVersion = version
       ? `${version.version} ${version.motor_codigo}`.trim()
       : (row.version ?? '')
+    const displayVersionLabel = version?.version ?? (row.version ?? '')
+    const displayEngine = version?.motor_codigo ?? ''
     const displayYear = version?.anio != null
       ? String(version.anio)
       : (row.year ?? '')
@@ -169,6 +173,8 @@ async function hydrateVehicleRows(rows: RawGarageVehicleRow[]): Promise<GarageVe
       brand: displayBrand,
       model: displayModel,
       version: displayVersion,
+      versionLabel: displayVersionLabel,
+      engine: displayEngine,
       year: displayYear,
       plate: row.plate ?? '',
       km: row.km ?? 0,

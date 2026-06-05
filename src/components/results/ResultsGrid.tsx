@@ -423,6 +423,10 @@ export default function ResultsGrid() {
       ? `Búsqueda general · ${searchQuery}`
       : 'Tu vehículo'
 
+  const noVehiclePartsMessage = vehicle
+    ? 'Perdón, aún no tenemos repuestos disponibles para tu modelo. Estamos trabajando en ello.'
+    : null
+
   function handleBack() {
     if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back()
@@ -458,16 +462,30 @@ export default function ResultsGrid() {
           VOLVER
         </button>
 
-        <div
-          className="results-vehicle-label flex items-center gap-2 px-4 py-[0.4rem] rounded-[20px] font-condensed font-bold uppercase tracking-[0.05em]"
-          style={{
-            background: 'var(--dark3)',
-            border: '1px solid var(--dark4)',
-            fontSize: '0.88rem',
-            color: 'var(--yellow)',
-          }}
-        >
-          🚗 {vehicleLabel}
+        <div className="results-vehicle-label flex items-center gap-4 leading-none">
+          <div
+            className="font-black uppercase"
+            style={{
+              color: '#ffffff',
+              fontSize: '1.3rem',
+              letterSpacing: '0.06em',
+              lineHeight: 1.05,
+              fontFamily: '"Barlow Condensed", sans-serif',
+            }}
+          >
+            {vehicle?.brand ?? 'TU'} <span style={{ color: '#e8e8e8' }}>{vehicle?.model ?? 'VEHÍCULO'}</span>
+          </div>
+          <div
+            style={{
+              color: '#8a8f96',
+              fontSize: '0.76rem',
+              letterSpacing: '0.1em',
+              fontFamily: '"Barlow Condensed", sans-serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {vehicle ? `${vehicle.engine} · ${vehicle.year}` : searchQuery ? `BÚSQUEDA · ${searchQuery}` : 'CATÁLOGO COMPATIBLE'}
+          </div>
         </div>
 
         <div
@@ -538,9 +556,27 @@ export default function ResultsGrid() {
               {error}
             </div>
           ) : catalogProducts.length === 0 ? (
-            <div className="rounded-md p-6" style={{ background: 'var(--light-card)', border: '1px solid #d9dde3', color: 'var(--text-dark)' }}>
-              No hay repuestos cargados para esa combinación de vehículo, categoría o búsqueda.
-            </div>
+            vehicle ? (
+              <div className="flex items-center justify-center rounded-2xl p-10 text-center" style={{ minHeight: '55vh', background: 'linear-gradient(180deg, rgba(15,18,22,0.96) 0%, rgba(10,12,14,0.98) 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ maxWidth: 720 }}>
+                  <div className="font-condensed font-black italic uppercase" style={{ color: 'var(--yellow)', fontSize: 'clamp(2rem, 4vw, 4rem)', lineHeight: 0.95, letterSpacing: '0.06em' }}>
+                    AÚN NO TENEMOS REPUESTOS
+                    <br />
+                    DISPONIBLES PARA TU MODELO
+                  </div>
+                  <p className="mt-5" style={{ color: 'var(--gray2)', fontSize: '1.05rem', lineHeight: 1.6 }}>
+                    {noVehiclePartsMessage}
+                  </p>
+                  <p className="mt-3" style={{ color: 'var(--gray)', fontSize: '0.95rem' }}>
+                    Estamos trabajando duro para sumar tu auto lo antes posible.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-md p-6" style={{ background: 'var(--light-card)', border: '1px solid #d9dde3', color: 'var(--text-dark)' }}>
+                No hay repuestos cargados para esa combinación de vehículo, categoría o búsqueda.
+              </div>
+            )
           ) : selectedGroup === 'TODOS' ? (
             <>
               <div
@@ -789,9 +825,6 @@ export default function ResultsGrid() {
         </button>
       )}
 
-      <div className={`toast ${toast ? 'show' : ''}`}>
-        ✓ Agregado al carrito
-      </div>
     </div>
   )
 }

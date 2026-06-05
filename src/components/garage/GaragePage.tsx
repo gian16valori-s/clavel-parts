@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
+import { useAppStore } from '@/lib/cartStore'
 import { supabase } from '@/lib/supabase'
 import {
   getGarageVehicles,
@@ -17,6 +18,7 @@ import AddCarModal  from './AddCarModal'
 
 export default function GaragePage() {
   const router = useRouter()
+  const { setVehicle, clearVehicle, clearSearchQuery } = useAppStore()
   const [user,      setUser]      = useState<User | null>(null)
   const [vehicles,  setVehicles]  = useState<GarageVehicle[]>([])
   const [stats,     setStats]     = useState<GarageStats>({ vehiclesCount: 0, favoritesCount: 0, alertsUnreadCount: 0 })
@@ -24,6 +26,28 @@ export default function GaragePage() {
   const [loading,      setLoading]      = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCar,   setEditingCar]   = useState<GarageVehicle | null>(null)
+
+  function syncSelectedVehicle(vehicle: GarageVehicle | null) {
+    clearSearchQuery()
+
+    if (!vehicle) {
+      clearVehicle()
+      return
+    }
+
+    setVehicle({
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year,
+      engine: vehicle.engine,
+      versionLabel: vehicle.versionLabel,
+    })
+  }
+
+  function handleSelectGarageVehicle(vehicle: GarageVehicle | null) {
+    setActiveCar(vehicle)
+    syncSelectedVehicle(vehicle)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -36,7 +60,9 @@ export default function GaragePage() {
       if (cancelled) return
       setVehicles(vehiclesData)
       setStats(statsData)
-      setActiveCar(vehiclesData[0] ?? null)
+      const nextActiveCar = vehiclesData[0] ?? null
+      setActiveCar(nextActiveCar)
+      syncSelectedVehicle(nextActiveCar)
       setLoading(false)
     }
 
@@ -68,12 +94,28 @@ export default function GaragePage() {
     setVehicles((prev) => [car, ...prev])
     setStats((prev) => ({ ...prev, vehiclesCount: prev.vehiclesCount + 1 }))
     setActiveCar(car)
+    clearSearchQuery()
+    setVehicle({
+      brand: car.brand,
+      model: car.model,
+      year: car.year,
+      engine: car.engine,
+      versionLabel: car.versionLabel,
+    })
     setShowAddModal(false)
   }
 
   function handleCarUpdated(car: GarageVehicle) {
     setVehicles((prev) => prev.map((item) => (item.id === car.id ? car : item)))
     setActiveCar((prev) => (prev?.id === car.id ? car : prev))
+    clearSearchQuery()
+    setVehicle({
+      brand: car.brand,
+      model: car.model,
+      year: car.year,
+      engine: car.engine,
+      versionLabel: car.versionLabel,
+    })
     setEditingCar(null)
   }
 
@@ -84,6 +126,19 @@ export default function GaragePage() {
         if (current?.id !== vehicleId) return current
         return nextVehicles[0] ?? null
       })
+      const nextActiveVehicle = nextVehicles.find((item) => item.id !== vehicleId) ?? nextVehicles[0] ?? null
+      clearSearchQuery()
+      if (nextActiveVehicle) {
+        setVehicle({
+          brand: nextActiveVehicle.brand,
+          model: nextActiveVehicle.model,
+          year: nextActiveVehicle.year,
+          engine: nextActiveVehicle.engine,
+          versionLabel: nextActiveVehicle.versionLabel,
+        })
+      } else {
+        clearVehicle()
+      }
       return nextVehicles
     })
     setStats((prev) => ({ ...prev, vehiclesCount: Math.max(0, prev.vehiclesCount - 1) }))
@@ -115,7 +170,7 @@ export default function GaragePage() {
           <CarSidebar
             vehicles={vehicles}
             activeId={activeCar?.id ?? null}
-            onSelect={setActiveCar}
+            onSelect={handleSelectGarageVehicle}
             onAdd={() => setShowAddModal(true)}
           />
         )}
@@ -128,7 +183,7 @@ export default function GaragePage() {
           user={user}
           vehicles={vehicles}
           activeVehicle={activeCar}
-          onSelectCar={setActiveCar}
+          onSelectCar={handleSelectGarageVehicle}
           onEditCar={setEditingCar}
           stats={stats}
           onLogout={handleLogout}
