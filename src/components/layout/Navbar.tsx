@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/cartStore'
 
 const navLinks = [
   'ACEITES', 'NEUMÁTICOS', 'LLANTAS', 'FILTROS',
-  'FRENOS', 'NOS',
+  'FRENOS', 'DETAILING',
 ]
 
 const rightLinks = ['OFF ROAD Y OUTDOOR']
