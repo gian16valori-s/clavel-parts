@@ -16,8 +16,8 @@ export default function PanelVendedorPage() {
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
   const [productos, setProductos] = useState<ProductoVendedorResumen[]>([]);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
+  const [success, setSuccess] = useState('');  const [nombreComercialInput, setNombreComercialInput] = useState('')
+  const [savingNombre, setSavingNombre] = useState(false)
   useEffect(() => {
     let cancelled = false
 
@@ -27,6 +27,7 @@ export default function PanelVendedorPage() {
         const vendedorActual = await getVendedorActual()
         if (cancelled) return
         setVendedor(vendedorActual)
+        setNombreComercialInput(vendedorActual?.nombre_comercial ?? '')
 
         if (vendedorActual) {
           const productsResult = await getProductosVendedorActual()
@@ -78,6 +79,24 @@ export default function PanelVendedorPage() {
   async function handleLogout() {
     await logoutVendedor()
     router.replace('/')
+  }
+
+  async function handleGuardarNombreComercial() {
+    if (!vendedor) return
+    setSavingNombre(true)
+    setError('')
+    setSuccess('')
+    const { error: sbError } = await supabase
+      .from('vendedores')
+      .update({ nombre_comercial: nombreComercialInput.trim() || null })
+      .eq('id', vendedor.id)
+    setSavingNombre(false)
+    if (sbError) {
+      setError('No se pudo guardar el nombre del negocio.')
+    } else {
+      setVendedor((prev) => prev ? { ...prev, nombre_comercial: nombreComercialInput.trim() || null } : prev)
+      setSuccess('Nombre del negocio actualizado correctamente.')
+    }
   }
 
 
@@ -207,6 +226,34 @@ export default function PanelVendedorPage() {
               <p><strong>ID vendedor:</strong> {vendedor.id}</p>
               <p><strong>Auth user:</strong> {vendedor.auth_user_id}</p>
               <p><strong>Nombre:</strong> {nombreVendedor}</p>
+            </div>
+
+            <div className="mt-4">
+              <label className="block mb-1 text-sm font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--gray2)' }}>
+                Nombre del negocio
+              </label>
+              <p className="mb-2 text-xs" style={{ color: 'var(--gray)' }}>
+                Este nombre aparece en la ficha de cada producto que publicás.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={nombreComercialInput}
+                  onChange={(e) => setNombreComercialInput(e.target.value)}
+                  placeholder="Ej: Repuestos García"
+                  className="flex-1 rounded-md px-3 py-2 text-sm"
+                  style={{ background: 'var(--dark3)', border: '1px solid var(--dark4)', color: 'var(--white)' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleGuardarNombreComercial}
+                  disabled={savingNombre}
+                  className="rounded-md px-3 py-2 text-sm font-bold uppercase"
+                  style={{ background: 'var(--yellow)', color: 'var(--text-dark)', opacity: savingNombre ? 0.6 : 1 }}
+                >
+                  {savingNombre ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </div>
 
             <div className="mt-6">

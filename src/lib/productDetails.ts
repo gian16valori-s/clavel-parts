@@ -47,6 +47,7 @@ type ProductRow = {
   ancho_cm?: number | null
   largo_cm?: number | null
   vendedor?: string | null
+  nombre_negocio?: string | null
   imagen_url?: string | null
   grupo?: string | null
   subgrupo?: string | null
@@ -172,7 +173,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
     ref: product.numero_parte_oem || product.sku || `REF-${id}`,
     price: Number(product.precio_oferta ?? product.precio ?? 0),
     stock: Number(product.stock ?? 0),
-    seller: product.vendedor || 'Vendedor verificado',
+    seller: product.nombre_negocio || product.vendedor || 'Vendedor verificado',
     group: groupName,
     subgroup: subgroupName,
     description,
