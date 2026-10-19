@@ -43,6 +43,7 @@ export default function DetalleProductoPage() {
   const [imagenActiva, setImagenActiva] = useState(0)
   const [compatExpanded, setCompatExpanded] = useState(false)
   const [zoomOpen, setZoomOpen] = useState(false)
+  const [showBuyModal, setShowBuyModal] = useState(false)
   const sellerTestimonials = [
     'Llego en tiempo y forma, pieza original y bien embalada.',
     'Excelente atencion. Me ayudaron a confirmar compatibilidad antes de comprar.',
@@ -90,7 +91,13 @@ export default function DetalleProductoPage() {
   }
 
   function handleBuyNow() {
+    setShowBuyModal(true)
+  }
+
+  function handleConfirmBuy() {
     handleAddToCart()
+    setShowBuyModal(false)
+    router.push('/checkout')
   }
 
   return (
@@ -367,6 +374,79 @@ export default function DetalleProductoPage() {
               </button>
             </div>
           </div>
+
+          {showBuyModal && (
+            <div
+              className="fixed inset-0 z-[600] flex items-center justify-center bg-black/60 p-4"
+              onClick={() => setShowBuyModal(false)}
+            >
+              <div
+                className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-4 text-center text-xs font-bold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
+                  Confirmar compra
+                </div>
+
+                <div className="mb-5 flex gap-4 items-center">
+                  {producto.images[0] && (
+                    <img
+                      src={producto.images[0]}
+                      alt={producto.name}
+                      className="h-20 w-20 rounded-xl object-cover border"
+                      style={{ borderColor: '#e2e8f0' }}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold uppercase tracking-[0.08em] truncate" style={{ color: '#64748b' }}>
+                      {producto.brand}
+                    </div>
+                    <div className="text-sm font-bold leading-snug mb-1" style={{ color: '#111827' }}>
+                      {producto.name}
+                    </div>
+                    <div className="text-2xl font-black" style={{ color: '#111827' }}>
+                      ${producto.price.toLocaleString('es-AR')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4 rounded-xl border px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0', background: '#f8fafc', color: '#475569' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="#FFD700" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                    <span className="font-semibold" style={{ color: '#111827' }}>Envío estimado: 2-4 días hábiles</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="#FFD700" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M8 11V8a4 4 0 118 0v3" />
+                    </svg>
+                    <span>Pago seguro con encriptación SSL</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={handleConfirmBuy}
+                    className="w-full rounded-xl py-4 font-bold uppercase tracking-[0.06em] text-sm transition-all"
+                    style={{ background: '#FFD700', color: '#111827' }}
+                  >
+                    Continuar al checkout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBuyModal(false)}
+                    className="w-full rounded-xl border py-3 font-bold uppercase tracking-[0.06em] text-sm transition-colors"
+                    style={{ borderColor: '#cbd5e1', color: '#64748b', background: '#fff' }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {zoomOpen && (
             <div
