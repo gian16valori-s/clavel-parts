@@ -129,9 +129,15 @@ const LEGACY_VEHICLE_SELECTS = [
 // ─── Vehicles ─────────────────────────────────────────────────────────────────
 
 async function hydrateVehicleRows(rows: RawGarageVehicleRow[]): Promise<GarageVehicle[]> {
-  const brandIds = [...new Set(rows.map((row) => row.marca_id).filter((value): value is number => typeof value === 'number'))]
-  const modelIds = [...new Set(rows.map((row) => row.modelo_id).filter((value): value is number => typeof value === 'number'))]
-  const versionIds = [...new Set(rows.map((row) => row.version_id).filter((value): value is number => typeof value === 'number'))]
+  const brandIds = Array.from(
+    new Set(rows.map((row) => row.marca_id).filter((value): value is number => typeof value === 'number')),
+  )
+  const modelIds = Array.from(
+    new Set(rows.map((row) => row.modelo_id).filter((value): value is number => typeof value === 'number')),
+  )
+  const versionIds = Array.from(
+    new Set(rows.map((row) => row.version_id).filter((value): value is number => typeof value === 'number')),
+  )
 
   const [brandsRes, modelsRes, versionsRes] = await Promise.all([
     brandIds.length > 0 ? supabase.from('marcas').select('id, nombre').in('id', brandIds) : Promise.resolve({ data: [], error: null } as const),
@@ -206,13 +212,19 @@ async function fetchVehicleRows(userId: string): Promise<RawGarageVehicleRow[]> 
 
   for (const columns of NEW_VEHICLE_SELECTS) {
     const { data, error } = await queryVehicleRowsByUser(userId, columns)
-    if (!error) return (data ?? []) as RawGarageVehicleRow[]
+    if (!error) {
+      const rows = Array.isArray(data) ? (data as unknown as RawGarageVehicleRow[]) : []
+      return rows
+    }
     lastError = error.message
   }
 
   for (const columns of LEGACY_VEHICLE_SELECTS) {
     const { data, error } = await queryVehicleRowsByUser(userId, columns)
-    if (!error) return (data ?? []) as RawGarageVehicleRow[]
+    if (!error) {
+      const rows = Array.isArray(data) ? (data as unknown as RawGarageVehicleRow[]) : []
+      return rows
+    }
     lastError = error.message
   }
 
@@ -223,12 +235,12 @@ async function fetchVehicleRows(userId: string): Promise<RawGarageVehicleRow[]> 
 async function fetchVehicleRowById(vehicleId: string): Promise<RawGarageVehicleRow | null> {
   for (const columns of NEW_VEHICLE_SELECTS) {
     const { data, error } = await queryVehicleRowById(vehicleId, columns)
-    if (!error && data) return data as RawGarageVehicleRow
+    if (!error && data) return data as unknown as RawGarageVehicleRow
   }
 
   for (const columns of LEGACY_VEHICLE_SELECTS) {
     const { data, error } = await queryVehicleRowById(vehicleId, columns)
-    if (!error && data) return data as RawGarageVehicleRow
+    if (!error && data) return data as unknown as RawGarageVehicleRow
   }
 
   return null
@@ -365,7 +377,7 @@ export async function addVehicle(
 
   const primary = await insertNewSchema()
   if (!primary.error && primary.data) {
-    const [hydrated] = await hydrateVehicleRows([primary.data as RawGarageVehicleRow])
+    const [hydrated] = await hydrateVehicleRows([primary.data as unknown as RawGarageVehicleRow])
     return { data: hydrated, error: null }
   }
 
@@ -376,7 +388,7 @@ export async function addVehicle(
     return { data: null, error: message }
   }
 
-  const [hydratedLegacy] = await hydrateVehicleRows([legacy.data as RawGarageVehicleRow])
+  const [hydratedLegacy] = await hydrateVehicleRows([legacy.data as unknown as RawGarageVehicleRow])
   return { data: hydratedLegacy, error: null }
 }
 
@@ -429,7 +441,7 @@ export async function updateVehicle(
 
   const primary = await updateNewSchema()
   if (!primary.error && primary.data) {
-    const [hydrated] = await hydrateVehicleRows([primary.data as RawGarageVehicleRow])
+    const [hydrated] = await hydrateVehicleRows([primary.data as unknown as RawGarageVehicleRow])
     return { data: hydrated, error: null }
   }
 
@@ -440,7 +452,7 @@ export async function updateVehicle(
     return { data: null, error: message }
   }
 
-  const [hydratedLegacy] = await hydrateVehicleRows([legacy.data as RawGarageVehicleRow])
+  const [hydratedLegacy] = await hydrateVehicleRows([legacy.data as unknown as RawGarageVehicleRow])
   return { data: hydratedLegacy, error: null }
 }
 
