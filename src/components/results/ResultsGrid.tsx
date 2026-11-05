@@ -22,7 +22,7 @@ const MAIN_CATEGORIES = [
   { label: 'Frenos', aliases: ['Frenos'] },
   { label: 'Transmisión', aliases: ['Transmisión'] },
   { label: 'Embrague', aliases: ['Embrague'] },
-  { label: 'Electricidad', aliases: ['Electricidad'] },
+  { label: 'Electricidad', aliases: ['Electricidad', 'Eléctrico'] },
   { label: 'Interior', aliases: ['Interior'] },
   { label: 'A/C y Calefacción', aliases: ['A/C y Calefacción', 'Calefacción', 'Climatización'] },
   { label: 'Inyección y Admisión', aliases: ['Inyección y Admisión', 'Inyección', 'Admisión', 'Combustible / Inyección'] },

@@ -39,19 +39,38 @@ export default function VehicleSelector() {
       setLoading(true)
       setLoadError(null)
 
-      const { data, error } = await supabase
-        .from('vista_catalogo')
-        .select('marca,modelo,anio,version,motor_codigo')
-        .eq('activo', true)
+      const PAGE_SIZE = 1000
+      const collected: CatalogVehicleRow[] = []
+      let failed = false
 
-      if (error) {
+      // Supabase corta cada consulta en 1000 filas, así que se pagina hasta traer todo.
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from('vista_catalogo')
+          .select('marca,modelo,anio,version,motor_codigo')
+          .eq('activo', true)
+          .order('product_id')
+          .order('version')
+          .range(from, from + PAGE_SIZE - 1)
+
+        if (error) {
+          failed = true
+          break
+        }
+
+        const page = (data as CatalogVehicleRow[] | null) ?? []
+        collected.push(...page)
+        if (page.length < PAGE_SIZE) break
+      }
+
+      if (failed) {
         setRows([])
         setLoadError('No se pudieron cargar vehículos con productos desde Supabase.')
         setLoading(false)
         return
       }
 
-      setRows((data as CatalogVehicleRow[] | null) ?? [])
+      setRows(collected)
       setLoading(false)
     }
 
