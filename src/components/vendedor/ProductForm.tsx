@@ -20,6 +20,7 @@ type Props = {
   vendedorId: number;
   supabaseUrl: string;
   supabaseKey: string;
+  donorId?: number;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -110,12 +111,14 @@ function VehicleSelectorHierarchical({
   setSelectedVersiones,
   onBack,
   onNext,
+  backHandlerRef,
 }: {
   supabase: any;
   selectedVersiones: VersionRow[];
   setSelectedVersiones: (v: VersionRow[]) => void;
   onBack: () => void;
   onNext: () => void;
+  backHandlerRef?: React.MutableRefObject<(() => boolean) | null>;
 }) {
   const [step, setStep] = useState(0); // 0: marca, 1: modelo, 2: generación
   const [marcas, setMarcas] = useState<Marca[]>([]);
@@ -168,6 +171,25 @@ function VehicleSelectorHierarchical({
 
   useEffect(() => { if (!marcaId) setStep(0); }, [marcaId]);
   useEffect(() => { if (marcaId && !modeloId) setStep(1); }, [marcaId, modeloId]);
+
+  // Permite que el botón "Atrás" superior retroceda dentro de este selector.
+  useEffect(() => {
+    if (!backHandlerRef) return;
+    backHandlerRef.current = () => {
+      if (modeloId) {
+        setModeloId(null);
+        setGeneraciones([]);
+        return true;
+      }
+      if (marcaId) {
+        setMarcaId(null);
+        setModelos([]);
+        return true;
+      }
+      return false;
+    };
+    return () => { backHandlerRef.current = null; };
+  }, [backHandlerRef, marcaId, modeloId]);
 
   const listStyle: React.CSSProperties = {
     display: "flex", flexDirection: "column", gap: 0,
@@ -350,7 +372,7 @@ function VehicleSelectorHierarchical({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) => {
+const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey, donorId }) => {
   const supabase = useMemo(
     () => createClient(supabaseUrl, supabaseKey),
     [supabaseUrl, supabaseKey]
@@ -396,6 +418,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   const [imagePreviews, setImagePreviews] = useState<(string | null)[]>([null, null, null]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const compatBackRef = useRef<(() => boolean) | null>(null);
 
   const selectedGrupo = useMemo(() => {
     if (!grupoId) return null;
@@ -555,6 +578,9 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     if (!marca.trim()) return setError("La marca es requerida");
     if (!precioNum || precioNum <= 0) return setError("El precio es inválido");
     if (stockNum < 0) return setError("El stock no puede ser negativo");
+    if (donorId && selectedVersiones.length === 0) {
+      return setError("Seleccioná al menos una compatibilidad confirmada para esta pieza usada.");
+    }
 
     setLoadingSubmit(true);
     setError(null);
@@ -562,6 +588,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
     // Paths subidos a Storage — guardamos para rollback en caso de error
     const uploadedPaths: string[] = [];
     let primaryImageUrl: string | null = null;
+    let createdProductId: number | null = null;
 
     try {
       const skuGenerado = `SKU-${Date.now()}`;
@@ -576,7 +603,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           grupo_id: Number(grupoId) || null,
           subgrupo_id: Number(subgrupoId) || null,
           marca_pieza: marca.trim(),
-          familia: familiaProducto === "tre_performance" ? "tre_performance" : null,
+          familia: donorId ? null : familiaProducto === "tre_performance" ? "tre_performance" : null,
           numero_parte_oem: numeroParteOem.trim() || null,
           descripcion_corta: descripcionCorta.trim() || null,
           descripcion_larga: descripcionLarga.trim() || null,
@@ -587,9 +614,9 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           ancho_cm: anchoCm === "" ? null : Number(anchoCm),
           largo_cm: largoCm === "" ? null : Number(largoCm),
           precio: precioNum,
-          stock: stockNum,
+          stock: donorId ? 1 : stockNum,
           vendedor_id: vendedorId,
-          activo: true,
+          activo: !donorId,
           liquidacion: false,
         }])
         .select()
@@ -600,6 +627,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
       }
 
       const productoId = (producto as any).id as number;
+      createdProductId = productoId;
 
       // Guardar compatibilidades
       if (selectedVersiones.length > 0) {
@@ -609,7 +637,10 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             producto_id: productoId,
             version_id: v.id,
           })));
-        if (compatError) console.warn("Compatibilidades:", compatError.message);
+        if (compatError) {
+          if (donorId) throw new Error(`No se pudieron guardar las compatibilidades: ${compatError.message}`);
+          console.warn("Compatibilidades:", compatError.message);
+        }
       }
 
       // Subir imágenes (con rollback si alguna falla)
@@ -647,10 +678,39 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
         }
       }
 
+      if (donorId) {
+        const { error: usedPartError } = await supabase
+          .from("piezas_usadas")
+          .insert({
+            vehiculo_donante_id: donorId,
+            vendedor_id: vendedorId,
+            producto_id: productoId,
+            estado: "publicada",
+          });
+        if (usedPartError) throw new Error(`No se pudo vincular la pieza al vehículo donante: ${usedPartError.message}`);
+
+        const { error: activateError } = await supabase
+          .from("productos")
+          .update({ activo: true })
+          .eq("id", productoId)
+          .eq("vendedor_id", vendedorId)
+          .select("id")
+          .single();
+        if (activateError) throw new Error(`La pieza quedó vinculada, pero no se pudo publicar: ${activateError.message}`);
+      }
+
       setPublishedNombre(nombre.trim());
       containerRef.current?.scrollIntoView({ behavior: "smooth" });
       setStep(4);
     } catch (err: any) {
+      if (donorId && createdProductId !== null) {
+        const { error: cleanupError } = await supabase.from("productos").delete().eq("id", createdProductId);
+        if (cleanupError) {
+          console.error("No se pudo eliminar el producto usado incompleto:", cleanupError);
+        } else {
+          await deleteProductImages(supabase, uploadedPaths);
+        }
+      }
       setError(err.message);
     } finally {
       setLoadingSubmit(false);
@@ -742,7 +802,19 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
   };
 
   const goBack = () => {
-    if (typeof window !== "undefined") {
+    if (step === 2 && compatBackRef.current?.()) return;
+    if (step === 2 || step === 3) {
+      setStep(step - 1);
+    } else if (step === 1 && tipoPiezaNombre) {
+      setTipoPiezaId("");
+      setTipoPiezaNombre("");
+    } else if (step === 1 && subgrupoId) {
+      setSubgrupoId("");
+      setSubgrupoNombre("");
+    } else if (step === 1 && grupoId) {
+      setGrupoId("");
+      setGrupoNombre("");
+    } else if (typeof window !== "undefined") {
       window.history.back();
     }
   };
@@ -766,7 +838,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           Home
         </button>
       </div>
-      {step !== 4 && <h2 style={{ marginBottom: 24 }}>Cargar producto</h2>}
+      {step !== 4 && <h2 style={{ marginBottom: 24 }}>{donorId ? "Cargar repuesto usado del vehículo" : "Cargar producto"}</h2>}
       {step !== 4 && <StepBar current={step} />}
 
       {/* ── PASO 4: Pantalla de éxito ── */}
@@ -788,7 +860,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           <h2 style={{ fontFamily: "inherit", fontWeight: 900, fontSize: "1.6rem",
             textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 10,
             color: "var(--white, #f9fafb)" }}>
-            ¡Producto publicado!
+            {donorId ? "¡Repuesto usado publicado!" : "¡Producto publicado!"}
           </h2>
 
           {publishedNombre && (
@@ -798,7 +870,9 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
           )}
 
           <p style={{ fontSize: "0.9rem", color: "var(--gray, #6b7280)", marginBottom: 36 }}>
-            Tu producto fue cargado correctamente y ya está visible en el catálogo.
+            {donorId
+              ? "El repuesto quedó vinculado a este vehículo donante y publicado en el catálogo."
+              : "Tu producto fue cargado correctamente y ya está visible en el catálogo."}
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
@@ -1095,6 +1169,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
             selectedVersiones={selectedVersiones}
             setSelectedVersiones={setSelectedVersiones}
             onBack={() => setStep(1)}
+            backHandlerRef={compatBackRef}
             onNext={() => setStep(3)}
           />
         )}
@@ -1221,7 +1296,9 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 </div>
               </div>
 
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Destino del producto</label>
+              {!donorId && <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Destino del producto</label>}
+              {!donorId && (
+                <>
               <select
                 value={familiaProducto}
                 onChange={(e) => setFamiliaProducto(e.target.value as "general" | "tre_performance")}
@@ -1233,6 +1310,8 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
               <div style={{ color: "#6b7280", fontSize: 13, marginTop: -6, marginBottom: 12, lineHeight: 1.4 }}>
                 Elegi TRE Performance para que el producto aparezca en la seccion The Racer&apos;s Edge y en sus menus de vehiculos.
               </div>
+                </>
+              )}
 
               <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Precio</label>
               <input
@@ -1245,8 +1324,10 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 style={inputStyle}
               />
 
-              <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Stock</label>
-              <input
+              {!donorId && <label style={{ fontWeight: 600, display: "block", marginBottom: 4 }}>Stock</label>}
+              {donorId ? (
+                <div style={{ ...inputStyle, marginBottom: 12, color: "#111" }}>Stock único: 1 unidad</div>
+              ) : <input
                 type="number"
                 placeholder="Stock"
                 value={stock}
@@ -1254,7 +1335,7 @@ const ProductForm: React.FC<Props> = ({ vendedorId, supabaseUrl, supabaseKey }) 
                 min={0}
                 required
                 style={inputStyle}
-              />
+              />}
 
               {/* ── Fotos del producto ── */}
               <label style={{ fontWeight: 600, display: "block", marginBottom: 10, marginTop: 4 }}>

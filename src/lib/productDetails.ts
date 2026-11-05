@@ -26,6 +26,11 @@ export type ProductDetail = {
   images: string[]
   attributes: ProductDetailAttribute[]
   compatibility: ProductCompatibility[]
+  used: {
+    donorId: number
+    donorName: string
+    donorVehicle: string
+  } | null
 }
 
 type ProductRow = {
@@ -101,6 +106,7 @@ function fallbackProduct(id: string): ProductDetail {
     images: [getCategoryImage('otros')],
     attributes: [],
     compatibility: [],
+    used: null,
   }
 }
 
@@ -119,7 +125,8 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
 
   const rows = (data as ProductRow[] | null) ?? []
 
-  if (error || rows.length === 0) {
+  if (error) throw error
+  if (rows.length === 0) {
     return fallbackProduct(id)
   }
 
@@ -135,6 +142,69 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
 
   if (imageUrls.length === 0 && product.imagen_url) {
     imageUrls = [product.imagen_url]
+  }
+
+  const { data: usedPart, error: usedPartError } = await supabase
+    .from('piezas_usadas')
+    .select('vehiculo_donante_id, estado')
+    .eq('producto_id', numericId)
+    .maybeSingle()
+
+  // Tolera que la migración de piezas usadas aún no esté aplicada.
+  if (usedPartError && usedPartError.code !== 'PGRST205' && usedPartError.code !== '42P01') throw usedPartError
+
+  let used: ProductDetail['used'] = null
+  if (usedPart?.estado === 'publicada') {
+    const { data: donor, error: donorError } = await supabase
+      .from('vehiculos_donantes')
+      .select('id, vendedor_id, version_id')
+      .eq('id', usedPart.vehiculo_donante_id)
+      .single()
+    if (donorError) throw donorError
+
+    const [photoResult, profileResult, versionResult] = await Promise.all([
+      supabase
+        .from('fotos_vehiculo_donante')
+        .select('url')
+        .eq('vehiculo_donante_id', donor.id)
+        .order('orden')
+        .limit(1),
+      supabase
+        .from('perfiles_desarmadero')
+        .select('nombre')
+        .eq('vendedor_id', donor.vendedor_id)
+        .maybeSingle(),
+      supabase
+        .from('versiones')
+        .select('modelo_id, anio, version, motor_codigo')
+        .eq('id', donor.version_id)
+        .single(),
+    ])
+    if (photoResult.error) throw photoResult.error
+    if (profileResult.error) throw profileResult.error
+    if (versionResult.error) throw versionResult.error
+
+    const { data: model, error: modelError } = await supabase
+      .from('modelos')
+      .select('marca_id, nombre')
+      .eq('id', versionResult.data.modelo_id)
+      .single()
+    if (modelError) throw modelError
+
+    const { data: brand, error: brandError } = await supabase
+      .from('marcas')
+      .select('nombre')
+      .eq('id', model.marca_id)
+      .single()
+    if (brandError) throw brandError
+
+    const donorPhoto = photoResult.data?.[0]?.url
+    if (donorPhoto && !imageUrls.includes(donorPhoto)) imageUrls.push(donorPhoto)
+    used = {
+      donorId: donor.id,
+      donorName: profileResult.data?.nombre || 'Desarmadero',
+      donorVehicle: `${brand.nombre} ${model.nombre} · ${versionResult.data.anio} · ${versionResult.data.version} · ${versionResult.data.motor_codigo ?? ''}`.replace(/\s+·\s+$/, ''),
+    }
   }
 
   const groupName = product.grupo || 'General'
@@ -180,5 +250,6 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
     images: imageUrls.length > 0 ? imageUrls : [getCategoryImage(groupName)],
     attributes,
     compatibility: compatibilityRows,
+    used,
   }
 }

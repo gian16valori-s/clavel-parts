@@ -23,13 +23,13 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
     <nav
       className={`${isSticky ? 'sticky' : transparent ? 'fixed' : ''} z-[350] flex items-center px-4 md:px-10 border-b-2 overflow-x-auto relative ${menuOpen ? 'navbar-mobile-open' : ''}`}
       style={{
-        background: transparent ? 'rgba(0,0,0,0.55)' : '#000',
+        background: transparent ? 'rgba(8,10,12,0.55)' : 'var(--dark2)',
         backdropFilter: transparent ? 'blur(10px)' : undefined,
         top: (isSticky || transparent) ? 78 : undefined,
         left: transparent ? 0 : undefined,
         right: transparent ? 0 : undefined,
         height: 48,
-        borderColor: transparent ? 'rgba(255,255,255,0.06)' : 'var(--dark)',
+        borderColor: transparent ? 'rgba(255,255,255,0.06)' : 'var(--dark3)',
       }}
     >
       {/* Hamburger button — only visible on mobile */}
@@ -40,7 +40,7 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: '#fff',
+          color: 'var(--white)',
           padding: '4px',
           flexShrink: 0,
         }}
@@ -89,14 +89,14 @@ export default function Navbar({ isSticky = true, transparent = false }: NavbarP
           font-style: italic;
           font-size: 0.98rem;
           letter-spacing: 0.05em;
-          color: #fff;
+          color: var(--white);
           text-transform: uppercase;
           text-decoration: none;
           padding: 0 1.1rem;
           height: 48px;
           display: flex;
           align-items: center;
-          border-right: 1px solid rgba(255,255,255,0.06);
+          border-right: 1px solid var(--dark4);
           transition: background 0.15s, color 0.15s;
           white-space: nowrap;
           flex-shrink: 0;

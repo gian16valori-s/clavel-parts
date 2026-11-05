@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 
 type AuthTopbarProps = {
   backFallback?: string
@@ -20,7 +21,7 @@ export default function AuthTopbar({ backFallback = '/' }: AuthTopbarProps) {
   return (
     <div
       className="w-full h-[62px] border-b flex items-center justify-between px-4 sm:px-6"
-      style={{ background: 'rgba(10,12,14,0.85)', borderColor: 'var(--dark4)' }}
+      style={{ background: 'var(--dark2)', borderColor: 'var(--dark4)' }}
     >
       <button
         type="button"
@@ -35,7 +36,7 @@ export default function AuthTopbar({ backFallback = '/' }: AuthTopbarProps) {
         CLAVEL PARTS
       </div>
 
-      <div style={{ width: 64 }} />
+      <ThemeToggle />
     </div>
   )
 }

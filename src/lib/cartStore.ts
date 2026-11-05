@@ -11,6 +11,8 @@ export interface CartProduct {
   delivery: string
   category: string
   image?: string
+  isUsed?: boolean
+  donorId?: number
   qty: number
 }
 

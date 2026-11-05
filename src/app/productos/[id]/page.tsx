@@ -40,6 +40,7 @@ export default function DetalleProductoPage() {
   const id = params?.id ?? ''
   const [producto, setProducto] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [imagenActiva, setImagenActiva] = useState(0)
   const [compatExpanded, setCompatExpanded] = useState(false)
   const [zoomOpen, setZoomOpen] = useState(false)
@@ -62,6 +63,10 @@ export default function DetalleProductoPage() {
       setCompatExpanded(false)
       setZoomOpen(false)
       setLoading(false)
+    }).catch((error: unknown) => {
+      if (cancelled) return
+      setLoadError(error instanceof Error ? error.message : 'No se pudo cargar el producto.')
+      setLoading(false)
     })
 
     return () => {
@@ -70,7 +75,7 @@ export default function DetalleProductoPage() {
   }, [id])
 
   if (loading) return <div style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Cargando producto...</div>
-  if (!producto) return <div style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>Producto no encontrado</div>
+  if (!producto) return <div style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>{loadError || 'Producto no encontrado'}</div>
 
   const compatibilityGroups = groupCompatibilityByBrand(producto.compatibility)
 
@@ -87,6 +92,8 @@ export default function DetalleProductoPage() {
       delivery: producto.stock > 0 ? '2-4' : 'a consultar',
       category: producto.group,
       image: producto.images[0],
+      isUsed: Boolean(producto.used),
+      donorId: producto.used?.donorId,
     })
   }
 
@@ -198,6 +205,11 @@ export default function DetalleProductoPage() {
                 <div className="mb-2 text-sm font-semibold uppercase tracking-[0.16em]" style={{ color: '#64748b' }}>
                   {producto.brand}
                 </div>
+                {producto.used && (
+                  <div className="mb-3 inline-flex rounded bg-amber-300 px-3 py-1 text-xs font-black uppercase tracking-wider text-black">
+                    Producto usado
+                  </div>
+                )}
                 <h1 className="mb-3 text-2xl font-black md:text-4xl" style={{ color: '#0f172a', lineHeight: 1.08 }}>
                   {producto.name}
                 </h1>
@@ -215,6 +227,21 @@ export default function DetalleProductoPage() {
                 <div className="mb-4 text-sm" style={{ color: '#475569' }}>
                   Stock disponible: {producto.stock} · Envio estimado: 2-4 dias
                 </div>
+
+                {producto.used && (
+                  <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+                    <div className="text-xs font-black uppercase tracking-wider text-amber-900">Fotos reales · pieza usada</div>
+                    <div className="mt-2 text-sm text-slate-700">Procedencia: {producto.used.donorVehicle}</div>
+                    <div className="mt-1 text-sm text-slate-700">Desarmadero: {producto.used.donorName}</div>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/vehiculos-donantes/${producto.used?.donorId}`)}
+                      className="mt-3 text-sm font-bold uppercase text-blue-800 underline"
+                    >
+                      Ver todas las piezas publicadas de este vehículo
+                    </button>
+                  </div>
+                )}
 
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                   <button
@@ -474,4 +501,3 @@ export default function DetalleProductoPage() {
     </>
   )
 }
-

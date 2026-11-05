@@ -33,6 +33,8 @@ export interface CatalogProduct extends Omit<CartProduct, 'qty'> {
   engine: string
   stock: number
   liquidation: boolean
+  isUsed?: boolean
+  donorId?: number
 }
 
 function slugifyCategory(value: string) {
@@ -98,11 +100,41 @@ export async function getCatalogProducts(
     if (error) throw error
 
     const rows = (data as CatalogRow[] | null) ?? []
-
-    // Collect numeric product IDs for fotos_producto query (new photo system)
-    const productIds = Array.from(
+    const catalogProductIds = Array.from(
       new Set(
         rows
+          .map((item) => (item.product_id != null ? Number(item.product_id) : null))
+          .filter((id): id is number => id != null && !isNaN(id))
+      )
+    )
+
+    const usedPartByProductId = new Map<number, { donorId: number; status: string }>()
+    if (catalogProductIds.length > 0) {
+      const { data: usedRows, error: usedError } = await supabase
+        .from('piezas_usadas')
+        .select('producto_id, vehiculo_donante_id, estado')
+        .in('producto_id', catalogProductIds)
+
+      // Si la migración de piezas usadas aún no se aplicó, el catálogo sigue funcionando sin ella.
+      if (usedError && usedError.code !== 'PGRST205' && usedError.code !== '42P01') throw usedError
+      for (const usedPart of usedRows ?? []) {
+        usedPartByProductId.set(Number(usedPart.producto_id), {
+          donorId: Number(usedPart.vehiculo_donante_id),
+          status: usedPart.estado,
+        })
+      }
+    }
+
+    const visibleRows = rows.filter((item) => {
+      if (item.product_id == null) return true
+      const usedPart = usedPartByProductId.get(Number(item.product_id))
+      return !usedPart || usedPart.status === 'publicada'
+    })
+
+    // Collect numeric product IDs for fotos_producto query (new photo system)
+    const visibleProductIds = Array.from(
+      new Set(
+        visibleRows
           .map((item) => (item.product_id != null ? Number(item.product_id) : null))
           .filter((id): id is number => id != null && !isNaN(id))
       )
@@ -111,11 +143,11 @@ export async function getCatalogProducts(
     const imageByProductId = new Map<number, string>()
 
     // Fetch from fotos_producto (new system — vendor-uploaded photos)
-    if (productIds.length > 0) {
+    if (visibleProductIds.length > 0) {
       const { data: fotoRows, error: fotoError } = await supabase
         .from('fotos_producto')
         .select('producto_id, url')
-        .in('producto_id', productIds)
+        .in('producto_id', visibleProductIds)
         .order('orden')
 
       if (!fotoError && fotoRows) {
@@ -128,27 +160,32 @@ export async function getCatalogProducts(
       }
     }
 
-    return rows.map((item, index) => ({
-      id: String(item.product_id ?? `${item.sku}-${index}`),
-      name: item.producto,
-      brand: item.marca_pieza || 'Sin marca',
-      ref: item.numero_parte_oem || item.sku || 'S/N',
-      price: Number(item.precio_oferta ?? item.precio ?? 0),
-      seller: item.vendedor || (item.vendedor_id ? `Vendedor #${item.vendedor_id}` : 'Vendedor verificado'),
-      sellerRating: 5,
-      delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
-      category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
-      image: (item.product_id != null ? imageByProductId.get(Number(item.product_id)) : undefined)
-        ?? (item.imagen_url || undefined),
-      group: item.grupo || 'General',
-      subgroup: resolveSubgroup(item),
-      version: item.version,
-      engine: item.motor_codigo,
-      stock: item.stock ?? 0,
-      liquidation: Boolean(item.liquidacion),
-    }))
+    return visibleRows.map((item, index) => {
+      const usedPart = item.product_id != null ? usedPartByProductId.get(Number(item.product_id)) : undefined
+      return {
+        id: String(item.product_id ?? `${item.sku}-${index}`),
+        name: item.producto,
+        brand: item.marca_pieza || 'Sin marca',
+        ref: item.numero_parte_oem || item.sku || 'S/N',
+        price: Number(item.precio_oferta ?? item.precio ?? 0),
+        seller: item.vendedor || (item.vendedor_id ? `Vendedor #${item.vendedor_id}` : 'Vendedor verificado'),
+        sellerRating: 5,
+        delivery: (item.stock ?? 0) > 0 ? '2-4' : 'a consultar',
+        category: slugifyCategory(item.grupo || item.subgrupo || 'general'),
+        image: (item.product_id != null ? imageByProductId.get(Number(item.product_id)) : undefined)
+          ?? (item.imagen_url || undefined),
+        group: item.grupo || 'General',
+        subgroup: resolveSubgroup(item),
+        version: item.version,
+        engine: item.motor_codigo,
+        stock: item.stock ?? 0,
+        liquidation: Boolean(item.liquidacion),
+        isUsed: Boolean(usedPart),
+        donorId: usedPart?.donorId,
+      }
+    })
   } catch (error) {
     console.error('Error fetching catalog products:', error)
-    return []
+    throw error
   }
 }

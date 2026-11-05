@@ -10,6 +10,8 @@ interface ListingCardProduct extends Omit<CartProduct, 'qty'> {
   subgroup?: string
   stock?: number
   liquidation?: boolean
+  isUsed?: boolean
+  donorId?: number
 }
 
 interface ListingCardProps {
@@ -71,7 +73,14 @@ export default function ListingCard({ product, onAdded, onOpen }: ListingCardPro
 
       {/* Body */}
       <div className="p-4">
-        <div className="badge-compat mb-[0.6rem]">✓ COMPATIBLE CON TU VEHÍCULO</div>
+        <div className="mb-[0.6rem] flex flex-wrap gap-2">
+          {product.isUsed && (
+            <span className="rounded bg-amber-300 px-2 py-1 font-condensed text-xs font-black uppercase text-black">
+              Usado
+            </span>
+          )}
+          <span className="badge-compat">✓ COMPATIBLE CON TU VEHÍCULO</span>
+        </div>
 
         <div
           className="font-condensed font-extrabold uppercase tracking-[0.03em] text-white leading-[1.2] mb-1"

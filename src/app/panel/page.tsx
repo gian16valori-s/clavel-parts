@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getVendedorActual, logoutVendedor, type Vendedor } from '@/lib/vendedorAuth';
 import { getProductosVendedorActual, type ProductoVendedorResumen } from '@/lib/vendedorProducts';
 import { supabase } from '@/lib/supabase';
+import ThemeToggle from '@/components/layout/ThemeToggle'
 
 // Quitar lógica y estado del formulario anterior
 
@@ -129,7 +130,15 @@ export default function PanelVendedorPage() {
           <p className="mb-6 text-sm" style={{ color: 'var(--gray)' }}>
             Usuario actual: {userEmail || 'sin email'}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => router.push('/panel/desarmadero')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+            >
+              Solicitar alta de desarmadero
+            </button>
             <button
               onClick={() => router.push('/')}
               className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
@@ -194,6 +203,20 @@ export default function PanelVendedorPage() {
               Vender
             </button>
             <button
+              onClick={() => router.push('/panel/donantes')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--slate)', color: 'var(--white)' }}
+            >
+              Vehículos donantes
+            </button>
+            <button
+              onClick={() => router.push('/panel/desarmadero')}
+              className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
+              style={{ background: 'var(--slate)', color: 'var(--white)' }}
+            >
+              Alta de desarmadero
+            </button>
+            <button
               onClick={handleLogout}
               className="rounded-md px-4 py-2 font-condensed font-bold uppercase"
               style={{ background: 'var(--slate)', color: 'var(--white)' }}
@@ -218,6 +241,22 @@ export default function PanelVendedorPage() {
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           {/* Aquí puedes agregar más gestiones del vendedor, menú, etc. */}
           <aside className="rounded-xl border p-5" style={{ background: 'var(--dark2)', borderColor: 'var(--dark4)' }}>
+            <div className="mb-5 rounded-lg border p-4" style={{ borderColor: 'var(--dark4)', background: 'var(--dark3)' }}>
+              <h2 className="font-condensed font-extrabold uppercase" style={{ color: 'var(--yellow)' }}>
+                ¿Sos desarmadero o vendés autopartes usadas?
+              </h2>
+              <p className="mt-2 text-sm" style={{ color: 'var(--gray2)' }}>
+                Completá la solicitud profesional. Revisaremos la documentación y el alta se realizará manualmente.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/panel/desarmadero')}
+                className="mt-4 rounded-md px-4 py-2 text-sm font-bold uppercase"
+                style={{ background: 'var(--yellow)', color: 'var(--text-dark)' }}
+              >
+                Solicitar alta
+              </button>
+            </div>
             <h2 className="font-condensed font-extrabold uppercase mb-4" style={{ fontSize: '1.35rem', color: 'var(--white)' }}>
               Datos del vendedor
             </h2>

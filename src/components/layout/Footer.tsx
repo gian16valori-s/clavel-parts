@@ -8,7 +8,7 @@ export default function Footer() {
         className="font-condensed font-black italic uppercase text-white"
         style={{ fontSize: '1.4rem' }}
       >
-        CLAVEL<span style={{ color: 'var(--yellow)' }}>PARTS</span>
+        <span style={{ color: 'var(--white)' }}>CLAVEL</span><span style={{ color: 'var(--yellow)' }}>PARTS</span>
       </div>
 
       <div style={{ fontSize: '0.78rem', color: '#444' }}>

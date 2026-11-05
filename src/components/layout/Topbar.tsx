@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { useAppStore } from '@/lib/cartStore'
 import { supabase } from '@/lib/supabase'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 
 interface TopbarProps {
   isSticky?: boolean
@@ -90,8 +91,8 @@ export default function Topbar({ isSticky = true, currentView }: TopbarProps) {
     >
       {/* Logo */}
       <div
-        className="font-condensed font-black italic uppercase text-white leading-none cursor-pointer"
-        style={{ fontSize: 'clamp(1.6rem, 5vw, 2.7rem)', letterSpacing: '0.02em' }}
+        className="font-condensed font-black italic         uppercase leading-none cursor-pointer"
+                style={{ color: 'var(--white)', fontSize: 'clamp(1.6rem, 5vw, 2.7rem)', letterSpacing: '0.02em' }}
         onClick={() => setView('home')}
       >
         {isGarageView
@@ -101,6 +102,7 @@ export default function Topbar({ isSticky = true, currentView }: TopbarProps) {
 
       {/* Right icons */}
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         {/* Vender tu repuesto — solo logueado, a la izquierda de Mi Garage */}
         {isAuthed && (
           <Link
